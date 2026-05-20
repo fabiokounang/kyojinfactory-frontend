@@ -77,6 +77,34 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'prod-order-forms',
+        loadComponent: () =>
+          import('./features/prod-order-forms/prod-order-form-list').then(
+            (m) => m.ProdOrderFormListComponent
+          ),
+      },
+      {
+        path: 'prod-order-forms/new',
+        loadComponent: () =>
+          import('./features/prod-order-forms/prod-order-form-form').then(
+            (m) => m.ProdOrderFormFormComponent
+          ),
+      },
+      {
+        path: 'prod-order-forms/:id/edit',
+        loadComponent: () =>
+          import('./features/prod-order-forms/prod-order-form-form').then(
+            (m) => m.ProdOrderFormFormComponent
+          ),
+      },
+      {
+        path: 'prod-order-forms/:id',
+        loadComponent: () =>
+          import('./features/prod-order-forms/prod-order-form-detail').then(
+            (m) => m.ProdOrderFormDetailComponent
+          ),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings').then((m) => m.SettingsComponent),

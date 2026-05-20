@@ -50,6 +50,7 @@ export class ShellComponent {
     { path: '/customers', label: 'Customer', icon: 'people' },
     { path: '/customer-pos', label: 'PO Customer', icon: 'receipt_long' },
     { path: '/bom', label: 'BOM Structure', icon: 'account_tree' },
+    { path: '/prod-order-forms', label: 'Prod Order Form', icon: 'precision_manufacturing' },
     { path: '/tasks', label: 'Todo / Reminder', icon: 'task_alt' },
     { path: '/master-items', label: 'Master Item', icon: 'inventory_2' },
     { path: '/settings', label: 'Pengaturan', icon: 'settings' },

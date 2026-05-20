@@ -1,0 +1,161 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <a mat-button routerLink="/prod-order-forms"><mat-icon>arrow_back</mat-icon> Daftar POF</a>
+      <h1>{{ isEditMode() ? 'Ubah POF' : 'Buat POF Baru' }}</h1>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert--error">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <!-- Header card -->
+      <mat-card class="section-card">
+        <mat-card-header><mat-card-title>Informasi POF</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="form-grid">
+            <!-- PO Customer selector -->
+            <mat-form-field appearance="outline" class="span-2">
+              <mat-label>PO Customer *</mat-label>
+              <mat-select formControlName="customerPoId" (selectionChange)="onPoChange($event.value)">
+                <mat-option [value]="0" disabled>— Pilih PO Customer —</mat-option>
+                @for (po of eligiblePos(); track po.id) {
+                  <mat-option [value]="po.id">
+                    {{ po.poNumber }} — {{ po.customer.name }}
+                  </mat-option>
+                }
+              </mat-select>
+              @if (form.controls.customerPoId.invalid && form.controls.customerPoId.touched) {
+                <mat-error>Pilih PO Customer terlebih dahulu</mat-error>
+              }
+            </mat-form-field>
+
+            @if (prefill()) {
+              <div class="info-row span-2">
+                <mat-icon>info_outline</mat-icon>
+                Customer: <strong>{{ prefill()!.po.customer.name }}</strong> &nbsp;·&nbsp;
+                Tanggal PO: <strong>{{ prefill()!.po.poDate }}</strong>
+              </div>
+            }
+
+            <mat-form-field appearance="outline">
+              <mat-label>Supervisor</mat-label>
+              <mat-select formControlName="supervisorUserId">
+                <mat-option [value]="null">— Tidak ditentukan —</mat-option>
+                @for (u of assignees(); track u.id) {
+                  <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Issued by</mat-label>
+              <mat-select formControlName="issuedByUserId">
+                <mat-option [value]="null">— Tidak ditentukan —</mat-option>
+                @for (u of assignees(); track u.id) {
+                  <mat-option [value]="u.id">{{ u.fullName }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="span-2">
+              <mat-label>Catatan</mat-label>
+              <textarea matInput formControlName="notes" rows="2"></textarea>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Lines card -->
+      @if (linesArray.length > 0) {
+        <mat-card class="section-card">
+          <mat-card-header>
+            <mat-card-title>Baris Produksi</mat-card-title>
+            <mat-card-subtitle>Isi qty, BOM referensi, dan tanggal untuk setiap item FG</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content formArrayName="lines">
+            @for (line of linesArray.controls; track $index) {
+              <div class="line-card" [formGroupName]="$index">
+                <div class="line-header">
+                  <span class="line-number">{{ $index + 1 }}</span>
+                  <div class="line-info">
+                    <span class="product-number">{{ line.controls.productNumber.value }}</span>
+                    <span class="item-name">{{ line.controls.itemName.value }}</span>
+                  </div>
+                </div>
+                <div class="line-fields">
+                  <mat-form-field appearance="outline" class="field-qty">
+                    <mat-label>Qty Produksi *</mat-label>
+                    <input matInput type="number" formControlName="qtyToProduce" min="0.0001" />
+                    <span matSuffix>{{ line.controls.unit.value }}</span>
+                    @if (line.controls.qtyToProduce.invalid && line.controls.qtyToProduce.touched) {
+                      <mat-error>Qty harus > 0</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="field-bom">
+                    <mat-label>Bill of Material Reference</mat-label>
+                    <mat-select formControlName="bomVersionId">
+                      <mat-option [value]="null">— Pilih BOM —</mat-option>
+                    </mat-select>
+                    <mat-hint>BOM aktif otomatis dipilih</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="field-date">
+                    <mat-label>Tanggal Mulai *</mat-label>
+                    <input matInput type="date" formControlName="startDate" />
+                    @if (line.controls.startDate.invalid && line.controls.startDate.touched) {
+                      <mat-error>Wajib diisi</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="field-date">
+                    <mat-label>Tanggal Selesai *</mat-label>
+                    <input matInput type="date" formControlName="endDate" />
+                    @if (line.controls.endDate.invalid && line.controls.endDate.touched) {
+                      <mat-error>Wajib diisi</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      } @else if (form.controls.customerPoId.value && form.controls.customerPoId.value !== 0) {
+        <mat-card class="section-card">
+          <mat-card-content>
+            <p class="empty-state">Memuat baris dari PO Customer…</p>
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <mat-card class="section-card">
+          <mat-card-content>
+            <p class="empty-state">Pilih PO Customer di atas untuk mengisi baris produksi secara otomatis.</p>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <div class="form-actions">
+        <a mat-stroked-button routerLink="/prod-order-forms">Batal</a>
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="saving() || linesArray.length === 0"
+        >
+          @if (saving()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>save</mat-icon>
+          }
+          {{ isEditMode() ? 'Simpan Perubahan' : 'Simpan sebagai DRAFT' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

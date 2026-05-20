@@ -1,0 +1,104 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Prod Order Form (POF)</h1>
+      <p>Form perintah produksi berdasarkan PO Customer yang sudah ter-BOM.</p>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/prod-order-forms/new">
+      <mat-icon>add</mat-icon>
+      Buat POF baru
+    </a>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="toolbar-field">
+          <mat-label>Cari POF / PO / Customer</mat-label>
+          <input matInput [value]="search()" (input)="onSearch($any($event.target).value)" />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="toolbar-field-sm">
+          <mat-label>Status</mat-label>
+          <mat-select [value]="statusFilter()" (selectionChange)="onStatusChange($event.value)">
+            <mat-option value="">Semua status</mat-option>
+            @for (s of statusOptions; track s) {
+              <mat-option [value]="s">{{ statusLabel(s) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <span class="count-label">{{ pofs().length }} POF</span>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+      } @else if (pofs().length === 0) {
+        <p class="empty-state">
+          Belum ada POF. <a routerLink="/prod-order-forms/new">Buat POF pertama</a>.
+        </p>
+      } @else {
+        <table mat-table [dataSource]="pofs()" class="full-width">
+          <ng-container matColumnDef="pofNumber">
+            <th mat-header-cell *matHeaderCellDef>No POF</th>
+            <td mat-cell *matCellDef="let pof">
+              <a [routerLink]="['/prod-order-forms', pof.id]" class="link-mono">{{ pof.pofNumber }}</a>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="poNumber">
+            <th mat-header-cell *matHeaderCellDef>No PO Customer</th>
+            <td mat-cell *matCellDef="let pof">
+              <a [routerLink]="['/customer-pos', pof.customerPoId]" class="sub-link">{{ pof.poNumber }}</a>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="customer">
+            <th mat-header-cell *matHeaderCellDef>Customer</th>
+            <td mat-cell *matCellDef="let pof">{{ pof.customer.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="supervisor">
+            <th mat-header-cell *matHeaderCellDef>Supervisor</th>
+            <td mat-cell *matCellDef="let pof">{{ pof.supervisorName || '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let pof">
+              <span class="pof-badge" [class]="'pof-badge--' + pof.status.toLowerCase()">
+                {{ statusLabel(pof.status) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="releasedAt">
+            <th mat-header-cell *matHeaderCellDef>Tgl Release</th>
+            <td mat-cell *matCellDef="let pof" class="cell-date">
+              {{ pof.releasedAt ? (pof.releasedAt | displayDate: 'date') : '—' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let pof" class="text-right row-actions">
+              <a mat-icon-button [routerLink]="['/prod-order-forms', pof.id]" aria-label="Detail">
+                <mat-icon>visibility</mat-icon>
+              </a>
+              @if (pof.status === 'DRAFT') {
+                <a mat-icon-button [routerLink]="['/prod-order-forms', pof.id, 'edit']" aria-label="Ubah">
+                  <mat-icon>edit</mat-icon>
+                </a>
+                <button mat-icon-button color="warn" (click)="remove(pof)" aria-label="Hapus">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,170 @@
+<div class="page">
+  @if (pof()) {
+    <div class="page-header">
+      <div class="page-header__main">
+        <a mat-button routerLink="/prod-order-forms"><mat-icon>arrow_back</mat-icon> Daftar POF</a>
+        <h1 class="pof-title">{{ pof()!.pofNumber }}</h1>
+        <p class="page-subtitle">
+          {{ pof()!.customer.name }}
+          <span class="sep">|</span>
+          PO: <a [routerLink]="['/customer-pos', pof()!.customerPoId]" class="po-link">{{ pof()!.poNumber }}</a>
+        </p>
+      </div>
+      <div class="page-actions">
+        <span class="pof-badge" [class]="'pof-badge--' + pof()!.status.toLowerCase()">
+          {{ statusLabel(pof()!.status) }}
+        </span>
+        @if (canEdit()) {
+          <a mat-stroked-button [routerLink]="['/prod-order-forms', pof()!.id, 'edit']" [class.disabled]="busy()">
+            <mat-icon>edit</mat-icon> Ubah
+          </a>
+        }
+        @if (canRelease()) {
+          <button mat-flat-button color="primary" (click)="release()" [disabled]="busy()">
+            <mat-icon>rocket_launch</mat-icon> Release POF
+          </button>
+        }
+        @if (canCancel()) {
+          <button mat-stroked-button color="warn" (click)="cancelPof()" [disabled]="busy()">
+            <mat-icon>cancel</mat-icon> Batalkan
+          </button>
+        }
+        @if (pof()!.status === 'DRAFT') {
+          <button mat-icon-button color="warn" (click)="deletePof()" [disabled]="busy()" matTooltip="Hapus POF">
+            <mat-icon>delete</mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert--error">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else if (pof()) {
+    <!-- Header info -->
+    <mat-card class="section-card">
+      <mat-card-header><mat-card-title>Informasi POF</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <span class="label">Nomor POF</span>
+            <span class="value value--mono">{{ pof()!.pofNumber }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">PO Customer</span>
+            <a [routerLink]="['/customer-pos', pof()!.customerPoId]" class="value po-link">{{ pof()!.poNumber }}</a>
+          </div>
+          <div class="meta-item">
+            <span class="label">Customer</span>
+            <span class="value">{{ pof()!.customer.name }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Supervisor</span>
+            <span class="value">{{ pof()!.supervisorName || '—' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Issued by</span>
+            <span class="value">{{ pof()!.issuedByName || '—' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Dibuat oleh</span>
+            <span class="value">{{ pof()!.createdByName || '—' }}</span>
+          </div>
+          @if (pof()!.releasedAt) {
+            <div class="meta-item">
+              <span class="label">Tgl Release</span>
+              <span class="value">{{ pof()!.releasedAt | displayDate: 'datetime' }}</span>
+            </div>
+          }
+          @if (pof()!.notes) {
+            <div class="meta-item meta-item--full">
+              <span class="label">Catatan</span>
+              <span class="value">{{ pof()!.notes }}</span>
+            </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Lines table -->
+    <mat-card class="section-card">
+      <mat-card-header><mat-card-title>Baris Produksi</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="pof()!.lines" class="full-width">
+          <ng-container matColumnDef="lineNo">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let l">{{ l.lineNo }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="productNumber">
+            <th mat-header-cell *matHeaderCellDef>Product Number</th>
+            <td mat-cell *matCellDef="let l">
+              <code>{{ l.productNumber }}</code>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="itemName">
+            <th mat-header-cell *matHeaderCellDef>Item FG</th>
+            <td mat-cell *matCellDef="let l">{{ l.itemName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="qtyToProduce">
+            <th mat-header-cell *matHeaderCellDef>Qty Produksi</th>
+            <td mat-cell *matCellDef="let l">{{ l.qtyToProduce | number }} {{ l.unit }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="bom">
+            <th mat-header-cell *matHeaderCellDef>BOM Reference</th>
+            <td mat-cell *matCellDef="let l">
+              @if (l.bomVersionName) {
+                <span class="bom-ref">{{ l.bomVersionName }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="startDate">
+            <th mat-header-cell *matHeaderCellDef>Tgl Mulai</th>
+            <td mat-cell *matCellDef="let l" class="cell-date">
+              {{ l.startDate ? (l.startDate | displayDate: 'date') : '—' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="endDate">
+            <th mat-header-cell *matHeaderCellDef>Tgl Selesai</th>
+            <td mat-cell *matCellDef="let l" class="cell-date">
+              {{ l.endDate ? (l.endDate | displayDate: 'date') : '—' }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="lineColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: lineColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Release hint -->
+    @if (pof()!.status === 'DRAFT') {
+      <mat-card class="section-card release-hint-card">
+        <mat-card-content>
+          <div class="release-hint">
+            <mat-icon>rocket_launch</mat-icon>
+            <div>
+              <strong>Siap Release?</strong>
+              <p>Pastikan semua baris sudah terisi BOM referensi, qty, dan tanggal sebelum release.
+                Setelah di-release, PO Customer otomatis berstatus <strong>IN_PRODUCTION</strong>.</p>
+            </div>
+            <button mat-flat-button color="primary" (click)="release()" [disabled]="busy()">
+              Release POF
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>

@@ -1,0 +1,37 @@
+.page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.page-header h1 {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+
+  .span-2 { grid-column: span 2; }
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.toggle-row { display: flex; align-items: center; }
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+
+  mat-spinner { display: inline-flex; }
+}
+
+.required { color: #e53935; }

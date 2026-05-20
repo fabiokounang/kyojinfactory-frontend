@@ -1,0 +1,134 @@
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .po-number { margin: 0; font-size: 1.5rem; font-family: monospace; }
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.loading-center { display: flex; justify-content: center; padding: 60px; }
+
+// Status badges
+.vpo-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 4px;
+
+  &--draft      { background: #e0e0e0; color: #444; }
+  &--confirmed  { background: #bbdefb; color: #1565c0; }
+  &--received   { background: #e8eaf6; color: #283593; }
+  &--completed  { background: #c8e6c9; color: #1b5e20; }
+  &--cancelled  { background: #ffcdd2; color: #b71c1c; }
+}
+
+.receive-card {
+  margin-bottom: 16px;
+  border: 2px solid #7986cb;
+
+  .receive-fields {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px;
+
+    .span-2 { grid-column: span 2; }
+  }
+
+  mat-spinner { display: inline-flex; }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.info-card { }
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  .span-2 { grid-column: span 2; }
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.4px; }
+  .value { font-weight: 500; }
+  .sub   { font-size: 0.75rem; color: #888; font-family: monospace; }
+  .muted { color: #888; font-style: italic; font-weight: 400; }
+  .due-date { color: #d32f2f; font-weight: 600; }
+}
+
+.lines-card { margin-bottom: 16px; }
+
+.lines-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #555;
+    background: #f5f5f5;
+  }
+
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+  }
+
+  .num { text-align: right; }
+  .center { text-align: center; }
+  .strong { font-weight: 600; }
+  .text-right { text-align: right; }
+
+  tfoot .total-row td {
+    background: #f5f5f5;
+    font-weight: 600;
+    border-top: 2px solid #e0e0e0;
+  }
+}
+
+.master-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  background: #ede7f6;
+  color: #4527a0;
+  margin-left: 6px;
+}
+
+.back-action { margin-top: 12px; }
+
+.req { color: #e53935; }

@@ -1,0 +1,61 @@
+<div class="page">
+  <div class="page-header">
+    <h1>{{ title }}</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else {
+    <mat-card>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Nama Vendor <span class="required">*</span></mat-label>
+            <input matInput formControlName="name" placeholder="PT. Contoh Jaya" />
+            @if (form.controls.name.hasError('required')) {
+              <mat-error>Nama vendor wajib diisi</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Contact Person</mat-label>
+            <input matInput formControlName="contactPerson" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nomor Telepon</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+            @if (form.controls.email.hasError('email')) {
+              <mat-error>Format email tidak valid</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="span-2">
+            <mat-label>Alamat</mat-label>
+            <textarea matInput formControlName="address" rows="3"></textarea>
+          </mat-form-field>
+
+          @if (editId()) {
+            <div class="span-2 toggle-row">
+              <mat-slide-toggle formControlName="isActive" color="primary">Vendor Aktif</mat-slide-toggle>
+            </div>
+          }
+
+          <div class="span-2 actions">
+            <button mat-stroked-button type="button" (click)="cancel()">Batal</button>
+            <button mat-flat-button color="primary" type="submit" [disabled]="busy() || form.invalid">
+              @if (busy()) { <mat-spinner diameter="18"></mat-spinner> } @else { Simpan }
+            </button>
+          </div>
+
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

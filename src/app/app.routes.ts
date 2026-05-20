@@ -105,6 +105,41 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'vendors',
+        loadComponent: () =>
+          import('./features/vendors/vendor-list').then((m) => m.VendorListComponent),
+      },
+      {
+        path: 'vendors/new',
+        loadComponent: () =>
+          import('./features/vendors/vendor-form').then((m) => m.VendorFormComponent),
+      },
+      {
+        path: 'vendors/:id/edit',
+        loadComponent: () =>
+          import('./features/vendors/vendor-form').then((m) => m.VendorFormComponent),
+      },
+      {
+        path: 'vendor-pos',
+        loadComponent: () =>
+          import('./features/vendor-pos/vendor-po-list').then((m) => m.VendorPoListComponent),
+      },
+      {
+        path: 'vendor-pos/new',
+        loadComponent: () =>
+          import('./features/vendor-pos/vendor-po-form').then((m) => m.VendorPoFormComponent),
+      },
+      {
+        path: 'vendor-pos/:id/edit',
+        loadComponent: () =>
+          import('./features/vendor-pos/vendor-po-form').then((m) => m.VendorPoFormComponent),
+      },
+      {
+        path: 'vendor-pos/:id',
+        loadComponent: () =>
+          import('./features/vendor-pos/vendor-po-detail').then((m) => m.VendorPoDetailComponent),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings').then((m) => m.SettingsComponent),

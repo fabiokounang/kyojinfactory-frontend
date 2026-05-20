@@ -1,0 +1,201 @@
+<div class="page">
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="48"></mat-spinner></div>
+  } @else if (vpo(); as v) {
+
+    <div class="page-header">
+      <div>
+        <h1 class="po-number">{{ v.poNumber }}</h1>
+        <span class="vpo-badge vpo-badge--{{ v.status | lowercase }}">{{ v.statusLabel }}</span>
+      </div>
+      <div class="header-actions">
+        @if (v.status === 'DRAFT') {
+          <a mat-stroked-button [routerLink]="['/vendor-pos', v.id, 'edit']">
+            <mat-icon>edit</mat-icon> Edit
+          </a>
+          <button mat-stroked-button color="warn" (click)="deleteDraft()" [disabled]="busy()">
+            <mat-icon>delete</mat-icon> Hapus
+          </button>
+          <button mat-flat-button color="primary" (click)="confirm()" [disabled]="busy()">
+            <mat-icon>check_circle</mat-icon> Konfirmasi
+          </button>
+        }
+        @if (v.status === 'CONFIRMED') {
+          <button mat-flat-button color="accent" (click)="showReceiveForm.set(true)" [disabled]="busy()">
+            <mat-icon>inventory_2</mat-icon> Catat Penerimaan Barang
+          </button>
+          <button mat-stroked-button color="warn" (click)="cancel()" [disabled]="busy()">
+            <mat-icon>cancel</mat-icon> Batalkan
+          </button>
+        }
+        @if (v.status === 'RECEIVED') {
+          <button mat-flat-button color="primary" (click)="complete()" [disabled]="busy()">
+            <mat-icon>task_alt</mat-icon> Tandai Selesai
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Receive form inline -->
+    @if (showReceiveForm()) {
+      <mat-card class="receive-card" [formGroup]="receiveForm">
+        <mat-card-header><mat-card-title>Catat Penerimaan Barang</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="receive-fields">
+            <mat-form-field appearance="outline">
+              <mat-label>Tanggal Terima <span class="req">*</span></mat-label>
+              <input matInput type="date" formControlName="receivedDate" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="span-2">
+              <mat-label>Catatan Penerimaan</mat-label>
+              <textarea matInput formControlName="receivedNotes" rows="2"></textarea>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-stroked-button type="button" (click)="showReceiveForm.set(false)">Batal</button>
+          <button mat-flat-button color="accent" (click)="submitReceive()" [disabled]="receiveForm.invalid || busy()">
+            @if (busy()) { <mat-spinner diameter="18"></mat-spinner> } @else { Simpan }
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+
+    <div class="detail-grid">
+
+      <!-- Header info -->
+      <mat-card class="info-card">
+        <mat-card-header><mat-card-title>Informasi PO</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Vendor</span>
+              <span class="value">{{ v.vendor.name }}</span>
+              <small class="sub">{{ v.vendor.code }}</small>
+            </div>
+            <div class="info-item">
+              <span class="label">Tanggal PO</span>
+              <span class="value">{{ v.poDate | date:'dd MMMM yyyy':'':'id' }}</span>
+            </div>
+            @if (v.vendorRef) {
+              <div class="info-item">
+                <span class="label">Ref. Vendor</span>
+                <span class="value">{{ v.vendorRef }}</span>
+              </div>
+            }
+            @if (v.notes) {
+              <div class="info-item span-2">
+                <span class="label">Catatan</span>
+                <span class="value">{{ v.notes }}</span>
+              </div>
+            }
+            <div class="info-item">
+              <span class="label">Dibuat oleh</span>
+              <span class="value">{{ v.createdByName || '—' }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Payment info -->
+      <mat-card class="info-card">
+        <mat-card-header><mat-card-title>Termin Pembayaran</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="info-grid">
+            <div class="info-item span-2">
+              <span class="label">Mode</span>
+              <span class="value">{{ paymentModeLabel(v.paymentMode) }}</span>
+            </div>
+            @if (v.dpAmount) {
+              <div class="info-item">
+                <span class="label">Nominal DP</span>
+                <span class="value">Rp {{ v.dpAmount | number:'1.0-0' }}</span>
+              </div>
+            }
+            @if (v.dpDueDate) {
+              <div class="info-item">
+                <span class="label">Jatuh Tempo DP</span>
+                <span class="value">{{ v.dpDueDate | date:'dd/MM/yyyy' }}</span>
+              </div>
+            }
+            @if (v.balanceDueDate) {
+              <div class="info-item">
+                <span class="label">Jatuh Tempo Pelunasan</span>
+                <span class="value due-date">{{ v.balanceDueDate | date:'dd/MM/yyyy' }}</span>
+              </div>
+            } @else if (v.status === 'DRAFT' || v.status === 'CONFIRMED') {
+              <div class="info-item">
+                <span class="label">Jatuh Tempo Pelunasan</span>
+                <span class="value muted">Dihitung saat barang diterima</span>
+              </div>
+            }
+            @if (v.receivedAt) {
+              <div class="info-item">
+                <span class="label">Tanggal Terima Barang</span>
+                <span class="value">{{ v.receivedAt | date:'dd/MM/yyyy' }}</span>
+              </div>
+              @if (v.receivedByName) {
+                <div class="info-item">
+                  <span class="label">Dicatat oleh</span>
+                  <span class="value">{{ v.receivedByName }}</span>
+                </div>
+              }
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Lines table -->
+    <mat-card class="lines-card">
+      <mat-card-header><mat-card-title>Baris Item</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <table class="lines-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama Item</th>
+              <th>Ukuran</th>
+              <th class="num">Qty</th>
+              <th>Unit</th>
+              <th class="num">Harga Satuan</th>
+              <th class="num">PPN</th>
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of v.lines; track l.id) {
+              <tr>
+                <td class="center">{{ l.lineNo }}</td>
+                <td>
+                  {{ l.itemName }}
+                  @if (l.masterItemId) {
+                    <small class="master-badge">Master</small>
+                  }
+                </td>
+                <td>{{ l.stdSize || '—' }}</td>
+                <td class="num">{{ l.qty | number:'1.0-2' }}</td>
+                <td>{{ l.unit }}</td>
+                <td class="num">Rp {{ l.unitPrice | number:'1.0-0' }}</td>
+                <td class="center">{{ l.ppnIncluded ? 'Include' : 'Exclude' }}</td>
+                <td class="num strong">Rp {{ lineTotal(l.unitPrice, l.qty, l.ppnIncluded) | number:'1.0-0' }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="7" class="text-right">Grand Total</td>
+              <td class="num strong">Rp {{ grandTotal() | number:'1.0-0' }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="back-action">
+      <a mat-stroked-button routerLink="/vendor-pos">
+        <mat-icon>arrow_back</mat-icon> Kembali ke daftar
+      </a>
+    </div>
+  }
+</div>

@@ -1,0 +1,45 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.toolbar-field-sm {
+  min-width: 160px;
+}
+
+.count-label {
+  margin-left: auto;
+  font-size: 13px;
+  color: #8a8278;
+}
+
+code {
+  background: #f5dccb;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.cat-fg {
+  background: #f5dccb !important;
+}
+.cat-wip {
+  background: #dfe9f5 !important;
+}
+.cat-raw {
+  background: #efe9dd !important;
+}
+
+.row-actions {
+  white-space: nowrap;
+}

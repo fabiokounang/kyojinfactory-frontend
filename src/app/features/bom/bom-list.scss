@@ -1,0 +1,82 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.toolbar-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.toolbar-field-sm {
+  min-width: 160px;
+}
+
+.count-label {
+  margin-left: auto;
+  font-size: 13px;
+  color: #8a8278;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.revision-label {
+  font-size: 12px;
+  color: #5c564e;
+}
+
+.revision-muted {
+  color: #c8c1b4;
+}
+
+.fg-code {
+  font-size: 12px;
+  font-weight: 600;
+  background: #f5dccb;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.bom-link {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: #b16a3e;
+  }
+}
+
+.sub-text {
+  font-size: 12px;
+  color: #8a8278;
+  font-weight: normal;
+}
+
+.row-actions {
+  white-space: nowrap;
+}
+
+.chip-draft {
+  background: #efe9dd !important;
+}
+.chip-active {
+  background: #d8ecdf !important;
+  color: #2c6b48 !important;
+}
+.chip-archived {
+  background: #f5dccb !important;
+  color: #6f5b3e !important;
+}

@@ -1,0 +1,258 @@
+<div class="page">
+  <div class="page-header">
+    <div class="page-header__main">
+      <a mat-button routerLink="/bom"><mat-icon>arrow_back</mat-icon> Daftar BOM</a>
+      @if (version()) {
+        <h1>BOM · {{ version()!.fgName }}</h1>
+        <p class="page-subtitle">
+          <code>{{ version()!.fgCode }}</code>
+          <span class="sep">|</span>
+          Unit {{ version()!.fgUnit }}
+          @if (version()!.versionName !== 'Utama' || version()!.status === 'ARCHIVED') {
+            <span class="sep">|</span>
+            {{ version()!.versionName }}
+          }
+        </p>
+      }
+    </div>
+    @if (version()) {
+      <div class="page-actions">
+        <mat-chip [class]="'chip-' + version()!.status.toLowerCase()">
+          {{
+            version()!.status === 'DRAFT'
+              ? 'Draft'
+              : version()!.status === 'ACTIVE'
+                ? 'Aktif'
+                : 'Diarsipkan'
+          }}
+        </mat-chip>
+        @if (detail()?.progress?.completed && isDraft()) {
+          <button mat-flat-button color="primary" (click)="activate()" [disabled]="busy()">
+            <mat-icon>verified</mat-icon> Aktifkan BOM
+          </button>
+        }
+        @if (version()!.status === 'ACTIVE') {
+          <button mat-stroked-button (click)="archive()" [disabled]="busy()">
+            <mat-icon>archive</mat-icon> Arsipkan
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else if (detail()) {
+    <!-- Progress banner (compact) -->
+    <div class="progress-bar-card">
+      <div class="progress-bar-card__left">
+        <mat-icon class="progress-bar-card__icon">
+          {{ detail()!.progress.completed ? 'check_circle' : 'account_tree' }}
+        </mat-icon>
+        <span class="progress-bar-card__label">{{ progressLabel() }}</span>
+        @if (components().length > 0) {
+          <span class="stat-chip">{{ components().length }} komponen</span>
+          @if (l1Stats().branch > 0) {
+            <span
+              class="stat-chip"
+              [class.stat-chip--warn]="l1Stats().branchPending > 0"
+            >{{ l1Stats().branchComplete }}/{{ l1Stats().branch }} cabang</span>
+          }
+        }
+      </div>
+      @if (showTodoPanel()) {
+        <div class="progress-bar-card__right">
+          <span class="todo-count-badge">{{ pendingCount() }}</span>
+          <span class="todo-count-label">perlu dilengkapi</span>
+        </div>
+      }
+    </div>
+
+    @if (showTodoPanel()) {
+      <ul class="todo-list">
+        @for (item of pendingItems(); track item.id) {
+          <li>
+            <button type="button" class="todo-item" (click)="goToPending(item)">
+              <code>{{ item.componentCode }}</code>
+              <span>{{ item.componentName }}</span>
+              <span class="todo-item__action">Lengkapi</span>
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    <div class="builder-workspace" [class.builder-workspace--readonly]="!isDraft()">
+      <!-- Struktur (kiri) -->
+      <mat-card class="section-card structure-panel">
+        <mat-card-header>
+          <mat-card-title>Struktur BOM</mat-card-title>
+          @if (isDraft()) {
+            <mat-card-subtitle>Klik FG atau komponen untuk menambah isian</mat-card-subtitle>
+          }
+        </mat-card-header>
+        <mat-card-content>
+          <button
+            type="button"
+            class="fg-root"
+            [class.fg-root--selected]="workTarget() === 'fg'"
+            (click)="selectFg()"
+          >
+            <div class="fg-root__icon">
+              <mat-icon>inventory_2</mat-icon>
+            </div>
+            <div class="fg-root__text">
+              <span class="fg-root__label">Finished Good</span>
+              <div class="fg-root__name">{{ version()!.fgName }}</div>
+              <code class="fg-root__code">{{ version()!.fgCode }}</code>
+            </div>
+            @if (isDraft()) {
+              <mat-icon class="fg-root__chevron">chevron_right</mat-icon>
+            }
+          </button>
+
+          @if (components().length > 0) {
+            <div class="tree-panel">
+              <app-bom-tree
+                [components]="components()"
+                [parentId]="null"
+                [pendingIds]="pendingParentIds()"
+                [allowEdit]="isDraft()"
+                [allowSelect]="isDraft()"
+                [selectedId]="selectedTreeId()"
+                (selectClick)="selectComponent($event)"
+                (deleteClick)="deleteComponent($event)"
+              ></app-bom-tree>
+            </div>
+          } @else if (isDraft()) {
+            <p class="structure-empty">Belum ada komponen — pilih FG lalu isi di panel kanan.</p>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Panel kerja (kanan) -->
+      @if (isDraft()) {
+        <mat-card class="section-card work-panel">
+          <mat-card-header>
+            <mat-card-title>{{ workPanelTitle() }}</mat-card-title>
+            @if (workTarget() === 'fg') {
+              <mat-card-subtitle>
+                Level 1 — langsung di bawah <strong>{{ version()!.fgName }}</strong>
+              </mat-card-subtitle>
+            } @else if (breadcrumb().length > 0) {
+              <mat-card-subtitle class="work-path">
+                <span>{{ version()!.fgName }}</span>
+                @for (b of breadcrumb(); track b.id) {
+                  <mat-icon>chevron_right</mat-icon>
+                  <span>{{ b.componentCode }}</span>
+                }
+              </mat-card-subtitle>
+            }
+          </mat-card-header>
+
+          <mat-card-content>
+            @if (!canEditWorkPanel() && workParent()) {
+              <div class="work-readonly">
+                <mat-icon>label</mat-icon>
+                <p>
+                  <strong>{{ workParent()!.componentName }}</strong> adalah material akhir — tidak
+                  perlu sub-komponen.
+                </p>
+                <button mat-stroked-button type="button" (click)="selectFg()">
+                  Kembali ke FG
+                </button>
+              </div>
+            } @else {
+              <form [formGroup]="form" (ngSubmit)="saveLines()" class="work-form">
+                <div class="lines-list" formArrayName="lines">
+                  @for (group of linesArray.controls; track $index; let i = $index) {
+                    <div class="line-card" [formGroupName]="i">
+                      <div class="line-card__head">
+                        <span class="line-num">{{ i + 1 }}</span>
+                        <mat-radio-group formControlName="status" class="line-type-toggle">
+                          <mat-radio-button value="RAW">
+                            <span class="line-type-label line-type-label--raw">Material akhir</span>
+                          </mat-radio-button>
+                          <mat-radio-button value="BRANCH">
+                            <span class="line-type-label line-type-label--branch">Punya sub-komponen</span>
+                          </mat-radio-button>
+                        </mat-radio-group>
+                        <button
+                          mat-icon-button
+                          type="button"
+                          (click)="removeLine(i)"
+                          [disabled]="linesArray.length <= 1"
+                          aria-label="Hapus baris"
+                        >
+                          <mat-icon>delete_outline</mat-icon>
+                        </button>
+                      </div>
+                      <div class="line-fields">
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="lf lf--name">
+                          <mat-label>Nama komponen</mat-label>
+                          <input matInput formControlName="componentName" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="lf lf--code">
+                          <mat-label>Kode</mat-label>
+                          <input matInput formControlName="componentCode" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="lf lf--xs">
+                          <mat-label>Qty</mat-label>
+                          <input matInput type="number" min="0" step="0.0001" formControlName="qtyPerParent" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="lf lf--xs">
+                          <mat-label>Unit</mat-label>
+                          <input matInput formControlName="unit" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="lf lf--xs">
+                          <mat-label>Waste %</mat-label>
+                          <input matInput type="number" min="0" step="0.01" formControlName="wastePercent" />
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="lf lf--size">
+                          <mat-label>Size (opsional)</mat-label>
+                          <input matInput formControlName="size" placeholder="mis. 120x40x10 cm" />
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <div class="form-footer">
+                  <button mat-stroked-button type="button" (click)="addLine()">
+                    <mat-icon>add</mat-icon>
+                    Tambah baris
+                  </button>
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="busy() || formInvalid()"
+                  >
+                    @if (busy()) {
+                      <mat-spinner diameter="18"></mat-spinner>
+                    }
+                    <span>{{ saveButtonLabel() }}</span>
+                  </button>
+                </div>
+                <p class="form-sync-hint">
+                  <mat-icon>info_outline</mat-icon>
+                  Saat disimpan, setiap komponen otomatis dibuat/diperbarui di Master Item
+                  (<strong>Cabang = WIP</strong>, <strong>Akhir = RAW</strong>).
+                </p>
+              </form>
+            }
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <mat-card class="section-card work-panel work-panel--readonly">
+          <mat-card-content>
+            <p class="work-readonly-hint">
+              BOM tidak dalam status draft. Struktur hanya dapat dilihat di panel kiri.
+            </p>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,234 @@
+﻿<div class="page">
+  @if (po()) {
+    <div class="page-header">
+      <div class="page-header__main">
+        <a mat-button routerLink="/customer-pos"><mat-icon>arrow_back</mat-icon> Daftar PO</a>
+        <h1>{{ po()!.poNumber }}</h1>
+        <p class="page-subtitle">
+          {{ po()!.customer.name }}
+          <span class="sep">|</span>
+          Tgl PO {{ formatDate(po()!.poDate) }}
+        </p>
+      </div>
+      <div class="page-actions">
+        <mat-chip [class]="'chip-' + po()!.status.toLowerCase()">{{ statusLabel(po()!.status) }}</mat-chip>
+        @if (canEdit()) {
+          <button mat-stroked-button (click)="goEdit()" [disabled]="busy()">
+            <mat-icon>edit</mat-icon> Ubah
+          </button>
+        }
+        @if (canDelete()) {
+          <button mat-stroked-button color="warn" (click)="deletePo()" [disabled]="busy()">
+            <mat-icon>delete</mat-icon> Hapus
+          </button>
+        }
+        @if (canConfirm()) {
+          <button mat-flat-button color="primary" (click)="confirm()" [disabled]="busy()">
+            <mat-icon>check_circle</mat-icon> Konfirmasi PO
+          </button>
+        }
+        @if (canCancel() && po()!.status !== 'COMPLETED') {
+          <button mat-stroked-button color="warn" (click)="cancelPo()" [disabled]="busy()">
+            <mat-icon>cancel</mat-icon> Batalkan
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="alert alert--error">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else if (po()) {
+    <mat-card class="section-card">
+      <mat-card-header><mat-card-title>Informasi PO</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <span class="label">No PO internal</span>
+            <span class="value value--mono">{{ po()!.poNumber }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">No PO customer</span>
+            <span class="value">{{ po()!.customerPoRef || emptyText }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Tanggal PO</span>
+            <span class="value">{{ formatDate(po()!.poDate) }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Aturan termin</span>
+            <span class="value">{{ paymentTermLabel(po()!) }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Jatuh tempo</span>
+            @if (po()!.dueDate) {
+              <span class="value value--strong">{{ formatDateTime(po()!.dueDate) }}</span>
+            } @else if (po()!.paymentTermTrigger === 'AFTER_GOODS_RECEIVED') {
+              <span class="badge-waiting">
+                <mat-icon>hourglass_empty</mat-icon>
+                Menunggu penerimaan barang
+              </span>
+            } @else {
+              <span class="value muted">{{ emptyText }}</span>
+            }
+          </div>
+          <div class="meta-item">
+            <span class="label">Tarif PPN</span>
+            <span class="value">{{ po()!.ppnRate }}%</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Dikonfirmasi</span>
+            <span class="value">{{ formatDateTime(po()!.confirmedAt) }}</span>
+          </div>
+          <div class="meta-item meta-item--full">
+            <span class="label">Catatan</span>
+            <span class="value">{{ po()!.notes || emptyText }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="section-card">
+      <mat-card-header><mat-card-title>Item pesanan</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <table mat-table [dataSource]="po()!.lines" class="full-width">
+          <ng-container matColumnDef="lineNo">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let l">{{ l.lineNo }}</td>
+          </ng-container>
+          <ng-container matColumnDef="itemName">
+            <th mat-header-cell *matHeaderCellDef>Item</th>
+            <td mat-cell *matCellDef="let l">{{ l.itemName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="itemCode">
+            <th mat-header-cell *matHeaderCellDef>Kode FG</th>
+            <td mat-cell *matCellDef="let l">
+              @if (l.itemCode) {
+                <code>{{ l.itemCode }}</code>
+              } @else {
+                <em class="muted">saat dikonfirmasi</em>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="stdSize">
+            <th mat-header-cell *matHeaderCellDef>Std Size</th>
+            <td mat-cell *matCellDef="let l">{{ l.stdSize || 'menunggu PO Vendor' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="qty">
+            <th mat-header-cell *matHeaderCellDef>Qty</th>
+            <td mat-cell *matCellDef="let l">{{ l.qty | number: '1.0-2' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="unit">
+            <th mat-header-cell *matHeaderCellDef>Unit</th>
+            <td mat-cell *matCellDef="let l">{{ l.unit }}</td>
+          </ng-container>
+          <ng-container matColumnDef="unitPrice">
+            <th mat-header-cell *matHeaderCellDef>Harga</th>
+            <td mat-cell *matCellDef="let l">{{ l.unitPrice | number: '1.0-2' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="ppn">
+            <th mat-header-cell *matHeaderCellDef>PPN</th>
+            <td mat-cell *matCellDef="let l">{{ ppnLabel(l, po()!.ppnRate) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="lineAmount">
+            <th mat-header-cell *matHeaderCellDef>Subtotal</th>
+            <td mat-cell *matCellDef="let l">{{ l.lineAmount | number: '1.0-2' }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="lineColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: lineColumns"></tr>
+        </table>
+        <div class="total-row total-row--detailed">
+          <div class="total-breakdown">
+            <span>Total DPP</span>
+            <span>Total PPN ({{ po()!.ppnRate }}%)</span>
+            <span class="total-label">Grand total</span>
+          </div>
+          <div class="total-values">
+            <span>{{ totalDpp() | number: '1.0-2' }}</span>
+            <span>{{ totalPpn() | number: '1.0-2' }}</span>
+            <strong>{{ total() | number: '1.0-2' }}</strong>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    @if (showReceiptCard()) {
+      <mat-card class="section-card receipt-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>local_shipping</mat-icon>
+          <mat-card-title>Penerimaan barang ke customer</mat-card-title>
+          <mat-card-subtitle>
+            @if (po()!.customerReceivedAt) {
+              Diterima {{ formatDate(po()!.customerReceivedAt) }} | Jatuh tempo
+              {{ formatDateTime(po()!.dueDate) }}
+            } @else {
+              Catat tanggal customer menerima barang agar jatuh tempo dapat dihitung
+            }
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (po()!.customerReceivedAt) {
+            <div class="receipt-recorded">
+              <div class="meta-grid meta-grid--compact">
+                <div class="meta-item">
+                  <span class="label">Tanggal terima</span>
+                  <span class="value">{{ formatDate(po()!.customerReceivedAt) }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="label">Jatuh tempo</span>
+                  <span class="value value--strong">{{ formatDateTime(po()!.dueDate) }}</span>
+                </div>
+                @if (po()!.customerReceivedNotes) {
+                  <div class="meta-item meta-item--full">
+                    <span class="label">Catatan serah terima</span>
+                    <span class="value">{{ po()!.customerReceivedNotes }}</span>
+                  </div>
+                }
+              </div>
+              <mat-divider></mat-divider>
+              <p class="receipt-edit-hint">Perlu koreksi? Isi form di bawah dan simpan ulang.</p>
+            </div>
+          }
+          <div class="receipt-form">
+            <mat-form-field appearance="outline">
+              <mat-label>Tanggal customer terima barang</mat-label>
+              <input matInput type="date" [(ngModel)]="receiptDate" [max]="today" />
+              <mat-hint>Jatuh tempo = tanggal ini + {{ po()!.paymentTermDays }} hari</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="span-full">
+              <mat-label>Catatan serah terima (opsional)</mat-label>
+              <textarea matInput rows="2" [(ngModel)]="receiptNotes"></textarea>
+            </mat-form-field>
+            <div class="receipt-actions">
+              <mat-checkbox [(ngModel)]="receiptMarkCompleted">Tandai PO sebagai COMPLETED</mat-checkbox>
+              <button mat-flat-button color="primary" (click)="saveReceipt()" [disabled]="busy() || !receiptDate">
+                <mat-icon>check</mat-icon>
+                {{ po()!.customerReceivedAt ? 'Perbarui penerimaan' : 'Catat penerimaan' }}
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @if (po()!.status === 'CONFIRMED' || po()!.status === 'IN_PRODUCTION') {
+      <mat-card class="next-step">
+        <mat-card-content>
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>Langkah berikutnya</strong>
+            <p>
+              Master Item FG dan todo BOM sudah tercatat. Buka
+              <a routerLink="/tasks">halaman Todo</a> untuk menindaklanjuti.
+            </p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+</div>
+

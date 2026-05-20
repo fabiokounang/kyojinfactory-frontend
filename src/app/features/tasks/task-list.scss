@@ -1,0 +1,88 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.count-label {
+  font-size: 13px;
+  color: #8a8278;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 4px;
+  border-bottom: 1px solid #efe9dd;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+}
+
+.task-icon {
+  flex-shrink: 0;
+  color: #b16a3e;
+}
+
+.task-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #3d3832;
+  line-height: 1.35;
+}
+
+.task-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #8a8278;
+}
+
+.task-actions {
+  flex-shrink: 0;
+  margin-left: auto;
+
+  @media (max-width: 640px) {
+    margin-left: 40px;
+  }
+
+  mat-chip {
+    flex-shrink: 0;
+  }
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.chip-open {
+  background: #f5dccb !important;
+}
+.chip-done {
+  background: #d8ecdf !important;
+}
+.chip-cancelled {
+  background: #fbe5e2 !important;
+}

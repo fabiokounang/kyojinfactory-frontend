@@ -1,0 +1,107 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>PO Customer</h1>
+      <p>Daftar pesanan masuk dari pelanggan.</p>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/customer-pos/new">
+      <mat-icon>add</mat-icon>
+      PO baru
+    </a>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="toolbar-field">
+          <mat-label>Cari PO</mat-label>
+          <input matInput [value]="search()" (input)="onSearch($any($event.target).value)" />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="toolbar-field-sm">
+          <mat-label>Status</mat-label>
+          <mat-select [value]="statusFilter()" (selectionChange)="onStatusChange($event.value)">
+            <mat-option value="">Semua status</mat-option>
+            @for (s of statusOptions; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <span class="count-label">{{ pos().length }} PO</span>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+      } @else if (pos().length === 0) {
+        <p class="empty-state">
+          Tidak ada PO. <a routerLink="/customer-pos/new">Buat PO baru</a>.
+        </p>
+      } @else {
+        <table mat-table [dataSource]="pos()" class="full-width">
+          <ng-container matColumnDef="poNumber">
+            <th mat-header-cell *matHeaderCellDef>No PO</th>
+            <td mat-cell *matCellDef="let po">
+              <a [routerLink]="['/customer-pos', po.id]" class="po-link">{{ po.poNumber }}</a>
+              @if (po.customerPoRef) {
+                <div class="sub-text">ref: {{ po.customerPoRef }}</div>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="poDate">
+            <th mat-header-cell *matHeaderCellDef>Tgl PO</th>
+            <td mat-cell *matCellDef="let po" class="cell-date">{{ po.poDate | displayDate: 'date' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="customer">
+            <th mat-header-cell *matHeaderCellDef>Customer</th>
+            <td mat-cell *matCellDef="let po">{{ po.customer.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="termin">
+            <th mat-header-cell *matHeaderCellDef>Termin</th>
+            <td mat-cell *matCellDef="let po">
+              {{ po.paymentTermDays }} hari
+              <div class="sub-text">
+                {{ po.paymentTermTrigger === 'AFTER_PO_ISSUED' ? 'setelah PO terbit' : 'setelah terima barang' }}
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="dueDate">
+            <th mat-header-cell *matHeaderCellDef>Jatuh tempo</th>
+            <td mat-cell *matCellDef="let po" class="cell-date">
+              @if (po.dueDate) {
+                {{ po.dueDate | displayDate: 'datetime' }}
+              } @else if (po.paymentTermTrigger === 'AFTER_GOODS_RECEIVED' && !po.customerReceivedAt && po.status !== 'DRAFT' && po.status !== 'CANCELLED') {
+                <mat-chip class="chip-waiting">Menunggu terima</mat-chip>
+              } @else {
+                —
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let po">
+              <mat-chip [class]="'chip-' + po.status.toLowerCase()">{{ po.status }}</mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let po" class="text-right row-actions">
+              <a mat-icon-button [routerLink]="['/customer-pos', po.id]" aria-label="Detail">
+                <mat-icon>visibility</mat-icon>
+              </a>
+              @if (canManageDraft(po)) {
+                <a mat-icon-button [routerLink]="['/customer-pos', po.id, 'edit']" aria-label="Ubah">
+                  <mat-icon>edit</mat-icon>
+                </a>
+                <button mat-icon-button color="warn" (click)="remove(po)" aria-label="Hapus">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

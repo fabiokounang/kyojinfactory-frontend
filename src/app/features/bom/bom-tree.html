@@ -1,0 +1,98 @@
+<ul class="tree-list" [class.tree-list--root]="depth === 0">
+  @for (node of children(); track node.id) {
+    <li
+      class="tree-node"
+      [class.tree-node--expanded]="isExpandable(node.id) && isExpanded(node.id)"
+    >
+      <div
+        class="tree-node__row"
+        [class.tree-node__row--clickable]="allowSelect || isExpandable(node.id)"
+        [class.tree-node__row--selected]="isSelected(node.id)"
+        [ngClass]="{
+          'tree-node__row--raw': node.isRaw && !isPending(node.id),
+          'tree-node__row--branch': node.hasNextLevel && !isPending(node.id),
+          'tree-node__row--pending': isPending(node.id)
+        }"
+        (click)="onRowClick(node, $event)"
+      >
+        @if (isExpandable(node.id)) {
+          <button
+            type="button"
+            class="tree-node__toggle"
+            [attr.aria-expanded]="isExpanded(node.id)"
+            [attr.aria-label]="isExpanded(node.id) ? 'Tutup sub-komponen' : 'Buka sub-komponen'"
+            (click)="toggleExpand(node.id, $event)"
+          >
+            <mat-icon>{{ isExpanded(node.id) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+          </button>
+        } @else {
+          <span class="tree-node__toggle-spacer" aria-hidden="true"></span>
+        }
+
+        <div class="tree-node__icon">
+          @if (isPending(node.id)) {
+            <mat-icon>warning_amber</mat-icon>
+          } @else if (node.hasNextLevel) {
+            <mat-icon>account_tree</mat-icon>
+          } @else {
+            <mat-icon>label</mat-icon>
+          }
+        </div>
+
+        <div class="tree-node__body">
+          <span class="tree-node__level">L{{ node.level }}</span>
+          <span class="tree-node__name">{{ node.componentName }}</span>
+          <code class="tree-node__code">{{ node.componentCode }}</code>
+          <span class="stat-pill">{{ node.qtyPerParent | number: '1.0-2' }} {{ node.unit }}</span>
+          @if (isExpandable(node.id)) {
+            <span class="tree-node__child-count">{{ childCount(node.id) }} anak</span>
+          }
+          @if (isPending(node.id)) {
+            <span class="badge badge--pending">Perlu sub-komponen</span>
+          } @else if (node.hasNextLevel) {
+            <span
+              class="badge badge--wip"
+              [matTooltip]="node.masterItemId ? 'Master Item #' + node.masterItemId : 'Akan disinkron ke Master Item WIP'"
+            >WIP</span>
+          } @else {
+            <span
+              class="badge badge--raw"
+              [matTooltip]="node.masterItemId ? 'Master Item #' + node.masterItemId : 'Akan disinkron ke Master Item RAW'"
+            >RAW</span>
+          }
+        </div>
+
+        @if (allowEdit) {
+          <div class="tree-node__actions" (click)="$event.stopPropagation()">
+            <button
+              mat-icon-button
+              type="button"
+              class="tree-node__action-btn"
+              matTooltip="Hapus"
+              (click)="deleteClick.emit(node)"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (isExpandable(node.id) && isExpanded(node.id)) {
+        <div class="tree-node__children">
+          <app-bom-tree
+            [components]="components"
+            [parentId]="node.id"
+            [depth]="depth + 1"
+            [pendingIds]="pendingIds"
+            [allowEdit]="allowEdit"
+            [allowSelect]="allowSelect"
+            [selectedId]="selectedId"
+            (editClick)="editClick.emit($event)"
+            (deleteClick)="deleteClick.emit($event)"
+            (selectClick)="selectClick.emit($event)"
+          ></app-bom-tree>
+        </div>
+      }
+    </li>
+  }
+</ul>

@@ -1,0 +1,49 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Todo / Reminder</h1>
+      <p>Tugas otomatis setelah PO Customer dikonfirmasi — terutama pembuatan BOM.</p>
+    </div>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="toolbar">
+        <mat-button-toggle-group [value]="filter()" (change)="setFilter($event.value)">
+          <mat-button-toggle value="OPEN">Terbuka</mat-button-toggle>
+          <mat-button-toggle value="DONE">Selesai</mat-button-toggle>
+          <mat-button-toggle value="">Semua</mat-button-toggle>
+        </mat-button-toggle-group>
+        <span class="count-label">{{ tasks().length }} todo</span>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+      } @else if (tasks().length === 0) {
+        <p class="empty-state">Tidak ada todo di kategori ini.</p>
+      } @else {
+        <div class="task-list">
+          @for (t of tasks(); track t.id) {
+            <div class="task-row">
+              <mat-icon class="task-icon">construction</mat-icon>
+              <div class="task-body">
+                <div class="task-title">{{ t.title }}</div>
+                <div class="task-sub">
+                  Jatuh tempo:
+                  @if (t.dueDate) {
+                    {{ t.dueDate | displayDate: 'datetime' }}
+                  } @else {
+                    belum ditentukan
+                  }
+                </div>
+              </div>
+              <div class="task-actions">
+                <mat-chip [class]="'chip-' + t.status.toLowerCase()">{{ statusLabel(t.status) }}</mat-chip>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

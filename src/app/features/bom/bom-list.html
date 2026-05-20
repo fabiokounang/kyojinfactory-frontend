@@ -1,0 +1,143 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>BOM Structure</h1>
+      <p>Bill of Material multi-level per Finished Good — pilih FG lalu langsung isi komponen.</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Buat BOM
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="toolbar-field">
+          <mat-label>Cari FG</mat-label>
+          <input matInput [value]="search()" (input)="onSearch($any($event.target).value)" />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="toolbar-field-sm">
+          <mat-label>FG</mat-label>
+          <mat-select [value]="filterFg()" (selectionChange)="filterFg.set($event.value)">
+            <mat-option [value]="''">Semua FG</mat-option>
+            @for (fg of fgItems(); track fg.id) {
+              <mat-option [value]="fg.id">{{ fg.code }} · {{ fg.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="toolbar-field-sm">
+          <mat-label>Status</mat-label>
+          <mat-select [value]="statusFilter()" (selectionChange)="statusFilter.set($event.value)">
+            <mat-option value="">Semua status</mat-option>
+            @for (s of statusOptions; track s) {
+              <mat-option [value]="s">{{ statusLabel(s) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <span class="count-label">{{ rows().length }} BOM</span>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+      } @else if (rows().length === 0) {
+        <p class="empty-state">
+          Belum ada BOM.
+          <button mat-button color="primary" (click)="openCreate()">Buat BOM</button>
+        </p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="rows()" class="full-width">
+            <ng-container matColumnDef="fgCode">
+              <th mat-header-cell *matHeaderCellDef>Kode FG</th>
+              <td mat-cell *matCellDef="let v">
+                <code class="fg-code">{{ v.fgCode }}</code>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="fgName">
+              <th mat-header-cell *matHeaderCellDef>Nama FG</th>
+              <td mat-cell *matCellDef="let v">
+                <a [routerLink]="['/bom', v.id]" class="bom-link">
+                  <strong>{{ v.fgName }}</strong>
+                </a>
+                <div class="sub-text">{{ v.fgUnit }}</div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="revision">
+              <th mat-header-cell *matHeaderCellDef>Revisi</th>
+              <td mat-cell *matCellDef="let v">
+                @if (showRevisionLabel(v); as label) {
+                  <span class="revision-label">{{ label }}</span>
+                } @else {
+                  <span class="revision-muted">—</span>
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="components">
+              <th mat-header-cell *matHeaderCellDef>Komponen</th>
+              <td mat-cell *matCellDef="let v">{{ v.componentCount ?? 0 }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let v">
+                <mat-chip [class]="'chip-' + v.status.toLowerCase()">
+                  {{ statusLabel(v.status) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef>Dibuat</th>
+              <td mat-cell *matCellDef="let v" class="cell-date">
+                {{ v.createdAt | displayDate: 'datetime' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let v" class="text-right row-actions">
+                <a
+                  mat-icon-button
+                  [routerLink]="['/bom', v.id]"
+                  matTooltip="Buka BOM"
+                  aria-label="Buka"
+                >
+                  <mat-icon>open_in_new</mat-icon>
+                </a>
+                @if (v.status === 'ACTIVE') {
+                  <button
+                    mat-icon-button
+                    (click)="archive(v)"
+                    matTooltip="Arsipkan"
+                    aria-label="Arsipkan"
+                  >
+                    <mat-icon>archive</mat-icon>
+                  </button>
+                }
+                @if (isSuperAdmin() && v.status !== 'ACTIVE') {
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="remove(v)"
+                    matTooltip="Hapus"
+                    aria-label="Hapus"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

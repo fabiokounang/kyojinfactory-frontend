@@ -1,0 +1,77 @@
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav
+    #drawer
+    class="shell-sidenav"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="!isHandset()"
+    fixedInViewport
+  >
+    <div class="sidenav-brand">
+      <span class="brand-mark">KF</span>
+      <div>
+        <div class="brand-title">Kyojin Factory</div>
+        <div class="brand-sub">Proses barang jadi</div>
+      </div>
+    </div>
+
+    <mat-nav-list>
+      @for (item of navItems; track item.path) {
+        <a
+          mat-list-item
+          [routerLink]="item.path"
+          routerLinkActive="active-nav"
+          (click)="closeDrawerOnNav()"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      <mat-divider></mat-divider>
+      <div class="user-row">
+        <div class="user-avatar">{{ user()?.fullName?.charAt(0) }}</div>
+        <div class="user-meta">
+          <div class="user-name">{{ user()?.fullName }}</div>
+          <div class="user-role">{{ user()?.role }}</div>
+        </div>
+      </div>
+      <button mat-stroked-button class="logout-btn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Keluar
+      </button>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content">
+    <mat-toolbar class="shell-toolbar" color="primary">
+      @if (isHandset()) {
+        <button mat-icon-button (click)="drawer.toggle()" aria-label="Menu">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <span class="toolbar-title">Kyojin Factory</span>
+      <span class="spacer"></span>
+      <button mat-button [matMenuTriggerFor]="userMenu" class="toolbar-user">
+        <mat-icon>account_circle</mat-icon>
+        <span class="toolbar-user-name">{{ user()?.fullName }}</span>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item disabled>
+          <mat-icon>badge</mat-icon>
+          <span>{{ user()?.role }}</span>
+        </button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Keluar</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <main class="main-area">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

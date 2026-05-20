@@ -1,0 +1,29 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.count-label {
+  font-size: 13px;
+  color: #8a8278;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.chip-active {
+  --mdc-chip-label-text-color: #2f7a4a;
+  background: #d8ecdf !important;
+}
+
+.chip-inactive {
+  --mdc-chip-label-text-color: #c0392b;
+  background: #fbe5e2 !important;
+}

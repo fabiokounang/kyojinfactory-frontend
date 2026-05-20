@@ -1,0 +1,134 @@
+.shell-container {
+  height: 100vh;
+}
+
+.shell-sidenav {
+  width: 260px;
+  background: linear-gradient(180deg, #fff8ef 0%, #f7eede 100%);
+  border-right: 1px solid #ece4d6;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid #ece4d6;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--mat-sys-primary, #c67b4e);
+  flex-shrink: 0;
+}
+
+.brand-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: #8a8278;
+}
+
+mat-nav-list {
+  flex: 1;
+  padding-top: 8px;
+}
+
+// Override Material's pill-shaped list item ripple/hover to a flat rectangle
+::ng-deep .shell-sidenav {
+  .mat-mdc-list-item,
+  .mat-mdc-list-item .mat-mdc-list-item-interactive::before,
+  .mat-mdc-list-item .mdc-list-item__primary-text {
+    border-radius: 0 !important;
+  }
+}
+
+.active-nav {
+  background: rgba(198, 123, 78, 0.12) !important;
+  color: var(--mat-sys-primary) !important;
+
+  mat-icon {
+    color: var(--mat-sys-primary) !important;
+  }
+}
+
+.sidenav-footer {
+  padding: 12px 16px 16px;
+  margin-top: auto;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f5dccb;
+  color: #b16a3e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #8a8278;
+  text-transform: capitalize;
+}
+
+.logout-btn {
+  width: 100%;
+}
+
+.shell-content {
+  background: #faf7f2;
+}
+
+.shell-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.toolbar-title {
+  font-weight: 600;
+}
+
+.toolbar-user-name {
+  margin-left: 4px;
+
+  @media (max-width: 520px) {
+    display: none;
+  }
+}
+
+.main-area {
+  min-height: calc(100vh - 64px);
+}

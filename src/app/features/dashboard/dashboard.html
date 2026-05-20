@@ -1,0 +1,108 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Halo, {{ user()?.fullName }}</h1>
+      <p>Ringkasan proses produksi Kyojin Factory hari ini.</p>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/customer-pos/new">
+      <mat-icon>add</mat-icon>
+      PO Customer baru
+    </a>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else {
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon draft">edit_note</mat-icon>
+          <div class="stat-value">{{ stats().draft }}</div>
+          <div class="stat-label">PO Draft</div>
+          <a mat-button routerLink="/customer-pos" [queryParams]="{ status: 'DRAFT' }">Lihat draft</a>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon confirmed">verified</mat-icon>
+          <div class="stat-value">{{ stats().confirmed }}</div>
+          <div class="stat-label">PO Dikonfirmasi</div>
+          <a mat-button routerLink="/customer-pos" [queryParams]="{ status: 'CONFIRMED' }">Lihat aktif</a>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon todo">task_alt</mat-icon>
+          <div class="stat-value">{{ stats().openTodos }}</div>
+          <div class="stat-label">Todo BOM Terbuka</div>
+          <a mat-button routerLink="/tasks">Lihat todo</a>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon class="stat-icon waiting">hourglass_empty</mat-icon>
+          <div class="stat-value">{{ stats().awaitingReceipt }}</div>
+          <div class="stat-label">Menunggu Penerimaan</div>
+          <a mat-button routerLink="/customer-pos">Lihat PO</a>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="grid-2">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>PO Customer terbaru</mat-card-title>
+          <a mat-button routerLink="/customer-pos">Semua PO</a>
+        </mat-card-header>
+        <mat-card-content>
+          @if (recentPos().length === 0) {
+            <p class="empty-state">
+              Belum ada PO. <a routerLink="/customer-pos/new">Buat PO pertama</a>.
+            </p>
+          } @else {
+            <mat-nav-list>
+              @for (po of recentPos(); track po.id) {
+                <a mat-list-item [routerLink]="['/customer-pos', po.id]">
+                  <span matListItemTitle>{{ po.poNumber }}</span>
+                  <span matListItemLine>{{ po.customer.name }} · {{ po.poDate | displayDate: 'date' }}</span>
+                  <span matListItemMeta class="po-status-badge" [class]="'po-status-badge--' + po.status.toLowerCase()">
+                    {{ poStatusLabel(po.status) }}
+                  </span>
+                </a>
+              }
+            </mat-nav-list>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Todo BOM terbuka</mat-card-title>
+          <a mat-button routerLink="/tasks">Lihat semua</a>
+        </mat-card-header>
+        <mat-card-content>
+          @if (openTasks().length === 0) {
+            <p class="empty-state">Tidak ada todo yang perlu dikerjakan. Bagus!</p>
+          } @else {
+            <mat-nav-list>
+              @for (task of openTasks(); track task.id) {
+                <mat-list-item>
+                  <mat-icon matListItemIcon>construction</mat-icon>
+                  <span matListItemTitle>{{ task.title }}</span>
+                  <span matListItemLine>
+                    Jatuh tempo:
+                    @if (task.dueDate) {
+                      {{ task.dueDate | displayDate: 'datetime' }}
+                    } @else {
+                      belum ditentukan
+                    }
+                  </span>
+                </mat-list-item>
+              }
+            </mat-nav-list>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

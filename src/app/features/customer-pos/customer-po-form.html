@@ -1,0 +1,197 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>{{ isEditMode() ? 'Ubah PO Customer' : 'PO Customer Baru' }}</h1>
+      <p>Item FG dan todo BOM dibuat otomatis saat PO dikonfirmasi.</p>
+    </div>
+    <a mat-stroked-button routerLink="/customer-pos">
+      <mat-icon>arrow_back</mat-icon>
+      Daftar PO
+    </a>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert--error">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <mat-card class="section-card">
+        <mat-card-header><mat-card-title>Informasi PO</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Customer</mat-label>
+              <mat-select formControlName="customerId">
+                <mat-option [value]="0" disabled>— Pilih customer —</mat-option>
+                @for (c of customers(); track c.id) {
+                  <mat-option [value]="c.id">{{ c.code }} · {{ c.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>No PO customer (referensi)</mat-label>
+              <input matInput formControlName="customerPoRef" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Tanggal PO</mat-label>
+              <input matInput type="date" formControlName="poDate" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Pemicu jatuh tempo</mat-label>
+              <mat-select formControlName="paymentTermTrigger">
+                <mat-option value="AFTER_PO_ISSUED">Sejak tanggal PO terbit</mat-option>
+                <mat-option value="AFTER_GOODS_RECEIVED">Sejak customer terima barang</mat-option>
+              </mat-select>
+              <mat-hint>
+                @if (form.get('paymentTermTrigger')?.value === 'AFTER_PO_ISSUED') {
+                  Jatuh tempo dihitung otomatis saat PO disimpan
+                } @else {
+                  Jatuh tempo dihitung setelah penerimaan barang dicatat di detail PO
+                }
+              </mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Termin (hari)</mat-label>
+              <input matInput type="number" min="0" formControlName="paymentTermDays" />
+              <mat-hint>Contoh: 14 hari</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Estimasi jatuh tempo</mat-label>
+              <input
+                matInput
+                [value]="computedDueDate() || ''"
+                [placeholder]="form.get('paymentTermTrigger')?.value === 'AFTER_GOODS_RECEIVED' ? 'Diisi setelah penerimaan dicatat' : ''"
+                readonly
+              />
+              @if (form.get('paymentTermTrigger')?.value === 'AFTER_GOODS_RECEIVED') {
+                <mat-hint>Akan otomatis terisi saat Anda mencatat penerimaan barang</mat-hint>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="span-full">
+              <mat-label>Catatan</mat-label>
+              <textarea matInput rows="2" formControlName="notes"></textarea>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section-card lines-card">
+        <mat-card-header class="lines-card__header">
+          <mat-card-title>Baris item pesanan</mat-card-title>
+          <span class="ppn-rate-badge">PPN {{ ppnRate() }}%</span>
+        </mat-card-header>
+        <mat-card-content formArrayName="lines">
+          <div class="lines-list">
+            @for (group of linesArray.controls; track $index; let i = $index) {
+              <div class="line-card" [formGroupName]="i">
+                <div class="line-card__header">
+                  <div class="line-card__heading">
+                    <span class="line-card__index">Baris {{ i + 1 }}</span>
+                    <span class="line-card__summary">
+                      {{ group.controls.itemName.value || 'Item baru' }}
+                      @if (group.controls.previewCode.value) {
+                        <code>{{ group.controls.previewCode.value }}</code>
+                      }
+                    </span>
+                  </div>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="line-card__remove"
+                    (click)="removeLine(i)"
+                    [disabled]="linesArray.length <= 1"
+                    aria-label="Hapus baris {{ i + 1 }}"
+                    matTooltip="Hapus baris"
+                  >
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+
+                <div class="line-grid">
+                  <mat-form-field appearance="outline" class="span-full" subscriptSizing="dynamic">
+                    <mat-label>Nama item</mat-label>
+                    <input matInput formControlName="itemName" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="span-full" subscriptSizing="dynamic">
+                    <mat-label>Preview kode FG</mat-label>
+                    <input matInput formControlName="previewCode" readonly />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>Qty</mat-label>
+                    <input matInput type="number" min="0" step="0.01" formControlName="qty" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>Unit</mat-label>
+                    <input matInput formControlName="unit" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="span-price" subscriptSizing="dynamic">
+                    <mat-label>Harga satuan</mat-label>
+                    <input matInput type="number" min="0" formControlName="unitPrice" />
+                  </mat-form-field>
+                </div>
+
+                <div class="line-ppn">
+                  <mat-checkbox formControlName="ppnIncluded" class="line-ppn__check">
+                    Harga sudah termasuk PPN {{ ppnRate() }}%
+                  </mat-checkbox>
+                  <div class="line-ppn__amounts">
+                    <div class="amount-cell">
+                      <span class="amount-label">DPP</span>
+                      <span class="amount-value">{{ lineBreakdown(i).dpp | number: '1.0-2' }}</span>
+                    </div>
+                    <div class="amount-cell">
+                      <span class="amount-label">PPN</span>
+                      <span class="amount-value">{{ lineBreakdown(i).ppn | number: '1.0-2' }}</span>
+                    </div>
+                    <div class="amount-cell amount-cell--total">
+                      <span class="amount-label">Total</span>
+                      <span class="amount-value">{{ lineAmount(i) | number: '1.0-2' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="lines-add">
+            <button mat-stroked-button type="button" class="lines-add__btn" (click)="addLine()">
+              <mat-icon>add</mat-icon>
+              Tambah baris
+            </button>
+          </div>
+
+          <div class="grand-total">
+            <div class="grand-total__label">Ringkasan PO</div>
+            <div class="grand-total__grid">
+              <div class="grand-total__row">
+                <span>Total DPP</span>
+                <span>{{ totalDpp() | number: '1.0-2' }}</span>
+              </div>
+              <div class="grand-total__row">
+                <span>Total PPN ({{ ppnRate() }}%)</span>
+                <span>{{ totalPpn() | number: '1.0-2' }}</span>
+              </div>
+              <div class="grand-total__row grand-total__row--emphasis">
+                <span>Grand total</span>
+                <strong>{{ total() | number: '1.0-2' }}</strong>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <div class="page-actions">
+        <button mat-button type="button" (click)="cancel()">Batal</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          }
+          {{ isEditMode() ? 'Simpan perubahan' : 'Simpan sebagai DRAFT' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

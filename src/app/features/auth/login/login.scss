@@ -1,0 +1,129 @@
+.login-page {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100vh;
+
+  @media (min-width: 960px) {
+    grid-template-columns: 1.05fr 1fr;
+  }
+}
+
+.login-brand {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  padding: 48px 40px;
+  color: #fff8ef;
+  background:
+    radial-gradient(120% 80% at 0% 0%, #d88f63 0%, transparent 55%),
+    linear-gradient(135deg, #b6663f 0%, #7a3f24 100%);
+
+  @media (min-width: 960px) {
+    display: flex;
+    align-items: center;
+  }
+
+  &__inner {
+    max-width: 480px;
+  }
+
+  h1 {
+    margin: 24px 0 12px;
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.6;
+    opacity: 0.92;
+  }
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &__mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #fff8ef;
+    color: #7a3f24;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  &__name {
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+.brand-features {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 15px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.copyright {
+  margin-top: 48px !important;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.login-form-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: #faf7f2;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 8px 4px 16px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.login-submit {
+  margin-top: 12px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.login-error {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background: #fbe5e2;
+  color: #c0392b;
+  font-size: 14px;
+}

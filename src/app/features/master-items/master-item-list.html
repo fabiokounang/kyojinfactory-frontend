@@ -1,0 +1,86 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Master Item</h1>
+      <p>FG otomatis dari PO Customer · WIP &amp; RAW otomatis dari struktur BOM.</p>
+    </div>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="toolbar-field">
+          <mat-label>Cari item</mat-label>
+          <input matInput [value]="search()" (input)="onSearch($any($event.target).value)" />
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="toolbar-field-sm">
+          <mat-label>Kategori</mat-label>
+          <mat-select [value]="category()" (selectionChange)="onCategory($event.value)">
+            <mat-option value="">Semua</mat-option>
+            <mat-option value="FG">FG — Finish Good</mat-option>
+            <mat-option value="WIP">WIP</mat-option>
+            <mat-option value="RAW">RAW</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <span class="count-label">{{ items().length }} item</span>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+      } @else if (items().length === 0) {
+        <p class="empty-state">
+          Belum ada master item. Item FG muncul setelah PO Customer dikonfirmasi.
+        </p>
+      } @else {
+        <table mat-table [dataSource]="items()" class="full-width">
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Kode</th>
+            <td mat-cell *matCellDef="let it"><code>{{ it.code }}</code></td>
+          </ng-container>
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nama</th>
+            <td mat-cell *matCellDef="let it">{{ it.name }}</td>
+          </ng-container>
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Kategori</th>
+            <td mat-cell *matCellDef="let it">
+              <mat-chip [class]="'cat-' + it.category.toLowerCase()">{{ it.category }}</mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="unit">
+            <th mat-header-cell *matHeaderCellDef>Unit</th>
+            <td mat-cell *matCellDef="let it">{{ it.unit }}</td>
+          </ng-container>
+          <ng-container matColumnDef="stdSize">
+            <th mat-header-cell *matHeaderCellDef>Std Size</th>
+            <td mat-cell *matCellDef="let it">{{ it.stdSize || '—' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="version">
+            <th mat-header-cell *matHeaderCellDef>Versi</th>
+            <td mat-cell *matCellDef="let it">{{ it.version }}</td>
+          </ng-container>
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Dibuat</th>
+            <td mat-cell *matCellDef="let it" class="cell-date">{{ it.createdAt | displayDate: 'datetime' }}</td>
+          </ng-container>
+          @if (isSuperAdmin()) {
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let it" class="text-right row-actions">
+                <button mat-icon-button (click)="openEdit(it)" aria-label="Ubah">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="remove(it)" aria-label="Hapus">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+          }
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+        </table>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

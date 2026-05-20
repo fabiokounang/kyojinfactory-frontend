@@ -1,0 +1,59 @@
+﻿<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Pengaturan</h1>
+      <p>Konfigurasi tarif pajak untuk perhitungan PO Customer.</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else {
+    <mat-card class="settings-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>percent</mat-icon>
+        <mat-card-title>Tarif PPN</mat-card-title>
+        <mat-card-subtitle>
+          Standar Indonesia saat ini 11%. Dipakai saat menghitung PO (include / exclude).
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="save()" class="settings-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Tarif PPN (%)</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              formControlName="ppnRate"
+              [readonly]="!isAdmin()"
+            />
+            <span matTextSuffix>%</span>
+            <mat-hint>Default sistem: 11% (PPN Indonesia per 2022)</mat-hint>
+          </mat-form-field>
+
+          @if (!isAdmin()) {
+            <p class="readonly-note">
+              <mat-icon>info</mat-icon>
+              Hanya akun admin yang dapat mengubah tarif. Anda tetap melihat tarif yang dipakai sistem.
+            </p>
+          }
+
+          <div class="form-actions">
+            @if (isAdmin()) {
+              <button mat-button type="button" (click)="resetDefault()">Kembalikan ke 11%</button>
+              <button mat-flat-button color="primary" type="submit" [disabled]="saving() || form.invalid">
+                @if (saving()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                }
+                Simpan
+              </button>
+            }
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

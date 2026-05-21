@@ -3,17 +3,19 @@
     <h1>{{ title }}</h1>
   </div>
 
+  @if (errorMessage()) {
+    <div class="alert alert--error">{{ errorMessage() }}</div>
+  }
+
   @if (loading()) {
     <div class="loading-center"><mat-spinner diameter="48"></mat-spinner></div>
   } @else {
     <form [formGroup]="form" (ngSubmit)="submit()">
 
-      <!-- Header card -->
       <mat-card class="section-card">
         <mat-card-header><mat-card-title>Informasi PO</mat-card-title></mat-card-header>
         <mat-card-content>
           <div class="grid-3">
-
             <mat-form-field appearance="outline" class="span-2">
               <mat-label>Vendor <span class="req">*</span></mat-label>
               <mat-select formControlName="vendorId">
@@ -29,9 +31,6 @@
             <mat-form-field appearance="outline">
               <mat-label>Tanggal PO <span class="req">*</span></mat-label>
               <input matInput type="date" formControlName="poDate" />
-              @if (form.controls.poDate.hasError('required')) {
-                <mat-error>Tanggal wajib diisi</mat-error>
-              }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="span-3">
@@ -43,71 +42,10 @@
               <mat-label>Catatan</mat-label>
               <textarea matInput formControlName="notes" rows="2"></textarea>
             </mat-form-field>
-
           </div>
         </mat-card-content>
       </mat-card>
 
-      <!-- Payment terms card -->
-      <mat-card class="section-card">
-        <mat-card-header><mat-card-title>Termin Pembayaran</mat-card-title></mat-card-header>
-        <mat-card-content>
-          <div class="payment-mode-row">
-            <label class="mode-label">Mode</label>
-            <mat-radio-group formControlName="paymentMode" class="mode-group">
-              @for (opt of paymentModeOpts; track opt.value) {
-                <mat-radio-button [value]="opt.value">{{ opt.label }}</mat-radio-button>
-              }
-            </mat-radio-group>
-          </div>
-
-          <mat-divider></mat-divider>
-
-          <div class="term-fields">
-            <mat-form-field appearance="outline">
-              <mat-label>
-                @switch (paymentMode) {
-                  @case ('UPFRONT') { Jatuh tempo (hari dari tgl PO) }
-                  @case ('DP_THEN_RECEIPT') { Jatuh tempo DP (hari dari tgl PO) }
-                  @default { Jatuh tempo setelah terima barang (hari) }
-                }
-              </mat-label>
-              <input matInput type="number" formControlName="paymentTermDays" min="0" max="365" />
-              <mat-hint>Masukkan 0 untuk jatuh tempo di hari yang sama</mat-hint>
-              @if (form.controls.paymentTermDays.hasError('required')) {
-                <mat-error>Wajib diisi</mat-error>
-              }
-            </mat-form-field>
-
-            @if (paymentMode === 'DP_THEN_RECEIPT') {
-              <mat-form-field appearance="outline">
-                <mat-label>Nominal DP (Rp)</mat-label>
-                <input matInput type="number" formControlName="dpAmount" min="0" />
-                <mat-hint>Nominal rupiah down payment</mat-hint>
-              </mat-form-field>
-            }
-          </div>
-
-          <div class="payment-hint">
-            @switch (paymentMode) {
-              @case ('UPFRONT') {
-                <mat-icon>info</mat-icon>
-                <span>Jatuh tempo lunas = Tgl PO + {{ form.controls.paymentTermDays.value }} hari. Dihitung saat konfirmasi.</span>
-              }
-              @case ('DP_THEN_RECEIPT') {
-                <mat-icon>info</mat-icon>
-                <span>Jatuh tempo DP = Tgl PO + {{ form.controls.paymentTermDays.value }} hari. Jatuh tempo pelunasan dihitung saat penerimaan barang.</span>
-              }
-              @case ('ON_RECEIPT') {
-                <mat-icon>info</mat-icon>
-                <span>Jatuh tempo = Tgl terima barang + {{ form.controls.paymentTermDays.value }} hari. Dihitung saat penerimaan dicatat.</span>
-              }
-            }
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Line items card -->
       <mat-card class="section-card">
         <mat-card-header>
           <mat-card-title>Baris Item</mat-card-title>
@@ -122,13 +60,20 @@
               <div [formGroupName]="$index" class="line-card">
                 <div class="line-header">
                   <span class="line-no">Baris {{ $index + 1 }}</span>
-                  <mat-checkbox formControlName="usesMasterItem"
-                    (change)="onToggleMasterItem($index, $any($event).checked)">
+                  <mat-checkbox
+                    formControlName="usesMasterItem"
+                    (change)="onToggleMasterItem($index, $any($event).checked)"
+                  >
                     Pilih dari Master Item
                   </mat-checkbox>
-                  <button mat-icon-button type="button" color="warn"
-                    (click)="removeLine($index)" [disabled]="linesArray.length === 1"
-                    matTooltip="Hapus baris">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="warn"
+                    (click)="removeLine($index)"
+                    [disabled]="linesArray.length === 1 || !canEditLines()"
+                    matTooltip="Hapus baris"
+                  >
                     <mat-icon>remove_circle_outline</mat-icon>
                   </button>
                 </div>
@@ -137,8 +82,10 @@
                   @if (lineCtrl.get('usesMasterItem')?.value) {
                     <mat-form-field appearance="outline" class="span-2">
                       <mat-label>Master Item (RAW/WIP)</mat-label>
-                      <mat-select formControlName="masterItemId"
-                        (selectionChange)="onMasterItemSelect($index, $event.value)">
+                      <mat-select
+                        formControlName="masterItemId"
+                        (selectionChange)="onMasterItemSelect($index, $event.value)"
+                      >
                         @for (mi of rawWipItems(); track mi.id) {
                           <mat-option [value]="mi.id">{{ mi.name }} [{{ mi.code }}]</mat-option>
                         }
@@ -148,9 +95,6 @@
                     <mat-form-field appearance="outline" class="span-2">
                       <mat-label>Nama Item <span class="req">*</span></mat-label>
                       <input matInput formControlName="itemName" placeholder="Nama bahan / barang" />
-                      @if (lineCtrl.get('itemName')?.hasError('required')) {
-                        <mat-error>Nama wajib diisi</mat-error>
-                      }
                     </mat-form-field>
                   }
 
@@ -187,7 +131,7 @@
                       Harga sudah termasuk PPN
                     </mat-checkbox>
                     <span class="line-total">
-                      Total: Rp {{ lineTotal($index) | number:'1.0-0' }}
+                      Total: Rp {{ lineTotal($index) | number: '1.0-0' }}
                     </span>
                   </div>
                 </div>
@@ -197,19 +141,144 @@
 
           <mat-divider></mat-divider>
           <div class="grand-total">
-            Grand Total: <strong>Rp {{ grandTotal() | number:'1.0-0' }}</strong>
+            Grand Total: <strong>Rp {{ grandTotal() | number: '1.0-0' }}</strong>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <!-- Actions -->
+      <mat-card class="section-card terms-card">
+        <mat-card-header class="lines-card__header">
+          <mat-card-title>Termin Pembayaran</mat-card-title>
+          @if (
+            termPercentTotal() !== 100 &&
+            termsArray.controls.some((g) => g.getRawValue().amountType === 'PERCENT')
+          ) {
+            <span class="terms-warning">Total % = {{ termPercentTotal() }}% (idealnya 100%)</span>
+          }
+        </mat-card-header>
+        <mat-card-content>
+          <div class="terms-toolbar">
+            <span class="terms-toolbar__label">Pemicu jatuh tempo</span>
+            <mat-form-field appearance="outline" class="terms-toolbar__field" subscriptSizing="dynamic">
+              <mat-select formControlName="paymentTermTrigger">
+                <mat-option value="AFTER_PO_ISSUED">Sejak PO terbit</mat-option>
+                <mat-option value="AFTER_GOODS_RECEIVED">Sejak barang diterima</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <span class="terms-toolbar__hint">
+              @if (trigger === 'AFTER_PO_ISSUED') {
+                Estimasi = tgl PO + hari termin
+              } @else {
+                Jatuh tempo diisi setelah penerimaan dicatat
+              }
+            </span>
+          </div>
+
+          <div class="terms-table-wrap">
+            <table class="terms-table">
+              <thead>
+                <tr>
+                  <th class="col-no">#</th>
+                  <th class="col-label">Label</th>
+                  <th class="col-type">Tipe</th>
+                  <th class="col-value">Nilai</th>
+                  <th class="col-days" matTooltip="Hari setelah pemicu jatuh tempo">Hari</th>
+                  <th class="col-est">Jatuh tempo</th>
+                  <th class="col-act" aria-label="Aksi"></th>
+                </tr>
+              </thead>
+              <tbody formArrayName="terms">
+                @for (tg of termsArray.controls; track $index; let i = $index) {
+                  <tr class="terms-table__row" [formGroupName]="i">
+                    <td class="col-no"><span class="term-no">{{ i + 1 }}</span></td>
+                    <td class="col-label">
+                      <input
+                        class="term-input"
+                        type="text"
+                        formControlName="label"
+                        placeholder="DP, Pelunasan…"
+                      />
+                    </td>
+                    <td class="col-type">
+                      <mat-button-toggle-group
+                        formControlName="amountType"
+                        class="term-type-toggle"
+                        hideSingleSelectionIndicator
+                      >
+                        <mat-button-toggle value="PERCENT">%</mat-button-toggle>
+                        <mat-button-toggle value="FIXED">Rp</mat-button-toggle>
+                      </mat-button-toggle-group>
+                    </td>
+                    <td class="col-value">
+                      <div class="term-input-group">
+                        <input
+                          class="term-input term-input--num"
+                          type="number"
+                          min="0"
+                          [step]="tg.getRawValue().amountType === 'PERCENT' ? 1 : 1000"
+                          formControlName="amountValue"
+                        />
+                        <span class="term-input-suffix">
+                          {{ tg.getRawValue().amountType === 'PERCENT' ? '%' : 'Rp' }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="col-days">
+                      <input
+                        class="term-input term-input--num term-input--days"
+                        type="number"
+                        min="0"
+                        formControlName="termDays"
+                        aria-label="Hari setelah pemicu"
+                      />
+                    </td>
+                    <td class="col-est">
+                      @if (previewTermDueDate(i); as due) {
+                        <span class="term-date" [matTooltip]="'Tgl PO + ' + tg.getRawValue().termDays + ' hari'">
+                          {{ due }}
+                        </span>
+                      } @else {
+                        <span class="term-date term-date--empty">—</span>
+                      }
+                    </td>
+                    <td class="col-act">
+                      <button
+                        mat-icon-button
+                        type="button"
+                        class="term-del"
+                        (click)="removeTerm(i)"
+                        [disabled]="termsArray.length <= 1"
+                        matTooltip="Hapus termin"
+                        aria-label="Hapus termin {{ i + 1 }}"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lines-add">
+            <button mat-stroked-button type="button" class="lines-add__btn" (click)="addTerm()">
+              <mat-icon>add</mat-icon>
+              Tambah termin
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
       <div class="form-actions">
         <button mat-stroked-button type="button" (click)="cancel()">Batal</button>
         <button mat-flat-button color="primary" type="submit" [disabled]="formInvalid() || busy()">
-          @if (busy()) { <mat-spinner diameter="18"></mat-spinner> } @else { Simpan Draft }
+          @if (busy()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            {{ editId() ? 'Simpan perubahan' : 'Simpan PO' }}
+          }
         </button>
       </div>
-
     </form>
   }
 </div>

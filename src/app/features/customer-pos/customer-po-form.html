@@ -2,7 +2,7 @@
   <div class="page-header">
     <div>
       <h1>{{ isEditMode() ? 'Ubah PO Customer' : 'PO Customer Baru' }}</h1>
-      <p>Item FG dan todo BOM dibuat otomatis saat PO dikonfirmasi.</p>
+      <p>Item FG dan todo BOM dibuat otomatis saat PO disimpan.</p>
     </div>
     <a mat-stroked-button routerLink="/customer-pos">
       <mat-icon>arrow_back</mat-icon>
@@ -39,37 +39,6 @@
               <mat-label>Tanggal PO</mat-label>
               <input matInput type="date" formControlName="poDate" />
             </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Pemicu jatuh tempo</mat-label>
-              <mat-select formControlName="paymentTermTrigger">
-                <mat-option value="AFTER_PO_ISSUED">Sejak tanggal PO terbit</mat-option>
-                <mat-option value="AFTER_GOODS_RECEIVED">Sejak customer terima barang</mat-option>
-              </mat-select>
-              <mat-hint>
-                @if (form.get('paymentTermTrigger')?.value === 'AFTER_PO_ISSUED') {
-                  Jatuh tempo dihitung otomatis saat PO disimpan
-                } @else {
-                  Jatuh tempo dihitung setelah penerimaan barang dicatat di detail PO
-                }
-              </mat-hint>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Termin (hari)</mat-label>
-              <input matInput type="number" min="0" formControlName="paymentTermDays" />
-              <mat-hint>Contoh: 14 hari</mat-hint>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Estimasi jatuh tempo</mat-label>
-              <input
-                matInput
-                [value]="computedDueDate() || ''"
-                [placeholder]="form.get('paymentTermTrigger')?.value === 'AFTER_GOODS_RECEIVED' ? 'Diisi setelah penerimaan dicatat' : ''"
-                readonly
-              />
-              @if (form.get('paymentTermTrigger')?.value === 'AFTER_GOODS_RECEIVED') {
-                <mat-hint>Akan otomatis terisi saat Anda mencatat penerimaan barang</mat-hint>
-              }
-            </mat-form-field>
             <mat-form-field appearance="outline" class="span-full">
               <mat-label>Catatan</mat-label>
               <textarea matInput rows="2" formControlName="notes"></textarea>
@@ -90,35 +59,52 @@
                 <div class="line-card__header">
                   <div class="line-card__heading">
                     <span class="line-card__index">Baris {{ i + 1 }}</span>
-                    <span class="line-card__summary">
-                      {{ group.controls.itemName.value || 'Item baru' }}
-                      @if (group.controls.previewCode.value) {
-                        <code>{{ group.controls.previewCode.value }}</code>
-                      }
-                    </span>
+                    <span class="line-card__summary">{{ group.controls.itemName.value || 'Item baru' }}</span>
                   </div>
                   <button
                     mat-icon-button
                     type="button"
                     class="line-card__remove"
                     (click)="removeLine(i)"
-                    [disabled]="linesArray.length <= 1"
+                    [disabled]="linesArray.length <= 1 || !canRemoveLine()"
+                    [matTooltip]="!canRemoveLine() ? 'Baris tidak dapat dihapus setelah PO dikonfirmasi' : 'Hapus baris'"
                     aria-label="Hapus baris {{ i + 1 }}"
-                    matTooltip="Hapus baris"
                   >
                     <mat-icon>delete_outline</mat-icon>
                   </button>
                 </div>
 
                 <div class="line-grid">
-                  <mat-form-field appearance="outline" class="span-full" subscriptSizing="dynamic">
-                    <mat-label>Nama item</mat-label>
-                    <input matInput formControlName="itemName" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="span-full" subscriptSizing="dynamic">
-                    <mat-label>Preview kode FG</mat-label>
-                    <input matInput formControlName="previewCode" readonly />
-                  </mat-form-field>
+                  <div class="line-item-name span-full">
+                    <mat-form-field appearance="outline" class="line-item-name__field" subscriptSizing="dynamic">
+                      <mat-label>Nama item</mat-label>
+                      <input
+                        matInput
+                        formControlName="itemName"
+                        (focus)="onItemNameFocus(i)"
+                      />
+                      @if (!group.controls.showPreview.value) {
+                        <mat-hint>Klik field ini untuk preview kode FG</mat-hint>
+                      }
+                    </mat-form-field>
+                    @if (group.controls.showPreview.value) {
+                      <div class="line-preview" aria-live="polite">
+                        <span class="line-preview__label">Kode FG (preview)</span>
+                        @if (isPreviewLoading(i)) {
+                          <span class="line-preview__value line-preview__value--loading">
+                            <mat-spinner diameter="16"></mat-spinner>
+                            Menghasilkan…
+                          </span>
+                        } @else if (group.controls.previewCode.value) {
+                          <code class="line-preview__code">{{ group.controls.previewCode.value }}</code>
+                        } @else if (group.controls.itemName.value.trim()) {
+                          <span class="line-preview__empty">Kode tidak tersedia</span>
+                        } @else {
+                          <span class="line-preview__empty">Isi nama item terlebih dahulu</span>
+                        }
+                      </div>
+                    }
+                  </div>
                   <mat-form-field appearance="outline" subscriptSizing="dynamic">
                     <mat-label>Qty</mat-label>
                     <input matInput type="number" min="0" step="0.01" formControlName="qty" />
@@ -183,13 +169,133 @@
         </mat-card-content>
       </mat-card>
 
+      <mat-card class="section-card terms-card">
+        <mat-card-header class="lines-card__header">
+          <mat-card-title>Termin Pembayaran</mat-card-title>
+          @if (termPercentTotal() !== 100 && termsArray.controls.some(g => g.getRawValue().amountType === 'PERCENT')) {
+            <span class="terms-warning">Total % = {{ termPercentTotal() }}% (idealnya 100%)</span>
+          }
+        </mat-card-header>
+        <mat-card-content>
+          <div class="terms-toolbar">
+            <span class="terms-toolbar__label">Pemicu jatuh tempo</span>
+            <mat-form-field appearance="outline" class="terms-toolbar__field" subscriptSizing="dynamic">
+              <mat-select formControlName="paymentTermTrigger">
+                <mat-option value="AFTER_PO_ISSUED">Sejak PO terbit</mat-option>
+                <mat-option value="AFTER_GOODS_RECEIVED">Sejak customer terima barang</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <span class="terms-toolbar__hint">
+              @if (trigger === 'AFTER_PO_ISSUED') {
+                Estimasi = tgl PO + hari termin
+              } @else {
+                Jatuh tempo diisi setelah penerimaan dicatat
+              }
+            </span>
+          </div>
+
+          <div class="terms-table-wrap">
+            <table class="terms-table">
+              <thead>
+                <tr>
+                  <th class="col-no">#</th>
+                  <th class="col-label">Label</th>
+                  <th class="col-type">Tipe</th>
+                  <th class="col-value">Nilai</th>
+                  <th class="col-days" matTooltip="Hari setelah pemicu jatuh tempo">Hari</th>
+                  <th class="col-est">Jatuh tempo</th>
+                  <th class="col-act" aria-label="Aksi"></th>
+                </tr>
+              </thead>
+              <tbody formArrayName="terms">
+                @for (tg of termsArray.controls; track $index; let i = $index) {
+                  <tr class="terms-table__row" [formGroupName]="i">
+                    <td class="col-no"><span class="term-no">{{ i + 1 }}</span></td>
+                    <td class="col-label">
+                      <input
+                        class="term-input"
+                        type="text"
+                        formControlName="label"
+                        placeholder="DP, Pelunasan…"
+                      />
+                    </td>
+                    <td class="col-type">
+                      <mat-button-toggle-group
+                        formControlName="amountType"
+                        class="term-type-toggle"
+                        hideSingleSelectionIndicator
+                      >
+                        <mat-button-toggle value="PERCENT">%</mat-button-toggle>
+                        <mat-button-toggle value="FIXED">Rp</mat-button-toggle>
+                      </mat-button-toggle-group>
+                    </td>
+                    <td class="col-value">
+                      <div class="term-input-group">
+                        <input
+                          class="term-input term-input--num"
+                          type="number"
+                          min="0"
+                          [step]="tg.getRawValue().amountType === 'PERCENT' ? 1 : 1000"
+                          formControlName="amountValue"
+                        />
+                        <span class="term-input-suffix">
+                          {{ tg.getRawValue().amountType === 'PERCENT' ? '%' : 'Rp' }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="col-days">
+                      <input
+                        class="term-input term-input--num term-input--days"
+                        type="number"
+                        min="0"
+                        formControlName="termDays"
+                        aria-label="Hari setelah pemicu"
+                      />
+                    </td>
+                    <td class="col-est">
+                      @if (previewTermDueDate(i); as due) {
+                        <span class="term-date" [matTooltip]="'Tgl PO + ' + tg.getRawValue().termDays + ' hari'">
+                          {{ due }}
+                        </span>
+                      } @else {
+                        <span class="term-date term-date--empty">—</span>
+                      }
+                    </td>
+                    <td class="col-act">
+                      <button
+                        mat-icon-button
+                        type="button"
+                        class="term-del"
+                        (click)="removeTerm(i)"
+                        [disabled]="termsArray.length <= 1"
+                        matTooltip="Hapus termin"
+                        aria-label="Hapus termin {{ i + 1 }}"
+                      >
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lines-add">
+            <button mat-stroked-button type="button" class="lines-add__btn" (click)="addTerm()">
+              <mat-icon>add</mat-icon>
+              Tambah termin
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
       <div class="page-actions">
         <button mat-button type="button" (click)="cancel()">Batal</button>
         <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
           @if (saving()) {
             <mat-spinner diameter="20"></mat-spinner>
           }
-          {{ isEditMode() ? 'Simpan perubahan' : 'Simpan sebagai DRAFT' }}
+          {{ isEditMode() ? 'Simpan perubahan' : 'Simpan PO' }}
         </button>
       </div>
     </form>

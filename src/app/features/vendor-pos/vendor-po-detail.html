@@ -9,13 +9,17 @@
         <span class="vpo-badge vpo-badge--{{ v.status | lowercase }}">{{ v.statusLabel }}</span>
       </div>
       <div class="header-actions">
-        @if (v.status === 'DRAFT') {
+        @if (canEdit()) {
           <a mat-stroked-button [routerLink]="['/vendor-pos', v.id, 'edit']">
             <mat-icon>edit</mat-icon> Edit
           </a>
+        }
+        @if (canDelete()) {
           <button mat-stroked-button color="warn" (click)="deleteDraft()" [disabled]="busy()">
             <mat-icon>delete</mat-icon> Hapus
           </button>
+        }
+        @if (canConfirm()) {
           <button mat-flat-button color="primary" (click)="confirm()" [disabled]="busy()">
             <mat-icon>check_circle</mat-icon> Konfirmasi
           </button>
@@ -36,7 +40,6 @@
       </div>
     </div>
 
-    <!-- Receive form inline -->
     @if (showReceiveForm()) {
       <mat-card class="receive-card" [formGroup]="receiveForm">
         <mat-card-header><mat-card-title>Catat Penerimaan Barang</mat-card-title></mat-card-header>
@@ -61,92 +64,55 @@
       </mat-card>
     }
 
-    <div class="detail-grid">
-
-      <!-- Header info -->
-      <mat-card class="info-card">
-        <mat-card-header><mat-card-title>Informasi PO</mat-card-title></mat-card-header>
-        <mat-card-content>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">Vendor</span>
-              <span class="value">{{ v.vendor.name }}</span>
-              <small class="sub">{{ v.vendor.code }}</small>
-            </div>
-            <div class="info-item">
-              <span class="label">Tanggal PO</span>
-              <span class="value">{{ v.poDate | date:'dd MMMM yyyy':'':'id' }}</span>
-            </div>
-            @if (v.vendorRef) {
-              <div class="info-item">
-                <span class="label">Ref. Vendor</span>
-                <span class="value">{{ v.vendorRef }}</span>
-              </div>
-            }
-            @if (v.notes) {
-              <div class="info-item span-2">
-                <span class="label">Catatan</span>
-                <span class="value">{{ v.notes }}</span>
-              </div>
-            }
-            <div class="info-item">
-              <span class="label">Dibuat oleh</span>
-              <span class="value">{{ v.createdByName || '—' }}</span>
-            </div>
+    <mat-card class="info-card">
+      <mat-card-header><mat-card-title>Informasi PO</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Vendor</span>
+            <span class="value">{{ v.vendor.name }}</span>
+            <small class="sub">{{ v.vendor.code }}</small>
           </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Payment info -->
-      <mat-card class="info-card">
-        <mat-card-header><mat-card-title>Termin Pembayaran</mat-card-title></mat-card-header>
-        <mat-card-content>
-          <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Tanggal PO</span>
+            <span class="value">{{ v.poDate | date:'dd MMMM yyyy':'':'id' }}</span>
+          </div>
+          @if (v.vendorRef) {
+            <div class="info-item">
+              <span class="label">Ref. Vendor</span>
+              <span class="value">{{ v.vendorRef }}</span>
+            </div>
+          }
+          <div class="info-item">
+            <span class="label">Pemicu termin</span>
+            <span class="value">{{ paymentTermLabel(v) }}</span>
+          </div>
+          @if (v.notes) {
             <div class="info-item span-2">
-              <span class="label">Mode</span>
-              <span class="value">{{ paymentModeLabel(v.paymentMode) }}</span>
+              <span class="label">Catatan</span>
+              <span class="value">{{ v.notes }}</span>
             </div>
-            @if (v.dpAmount) {
-              <div class="info-item">
-                <span class="label">Nominal DP</span>
-                <span class="value">Rp {{ v.dpAmount | number:'1.0-0' }}</span>
-              </div>
-            }
-            @if (v.dpDueDate) {
-              <div class="info-item">
-                <span class="label">Jatuh Tempo DP</span>
-                <span class="value">{{ v.dpDueDate | date:'dd/MM/yyyy' }}</span>
-              </div>
-            }
-            @if (v.balanceDueDate) {
-              <div class="info-item">
-                <span class="label">Jatuh Tempo Pelunasan</span>
-                <span class="value due-date">{{ v.balanceDueDate | date:'dd/MM/yyyy' }}</span>
-              </div>
-            } @else if (v.status === 'DRAFT' || v.status === 'CONFIRMED') {
-              <div class="info-item">
-                <span class="label">Jatuh Tempo Pelunasan</span>
-                <span class="value muted">Dihitung saat barang diterima</span>
-              </div>
-            }
-            @if (v.receivedAt) {
-              <div class="info-item">
-                <span class="label">Tanggal Terima Barang</span>
-                <span class="value">{{ v.receivedAt | date:'dd/MM/yyyy' }}</span>
-              </div>
-              @if (v.receivedByName) {
-                <div class="info-item">
-                  <span class="label">Dicatat oleh</span>
-                  <span class="value">{{ v.receivedByName }}</span>
-                </div>
-              }
-            }
+          }
+          <div class="info-item">
+            <span class="label">Dibuat oleh</span>
+            <span class="value">{{ v.createdByName || '—' }}</span>
           </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
+          @if (v.receivedAt) {
+            <div class="info-item">
+              <span class="label">Tanggal Terima Barang</span>
+              <span class="value">{{ v.receivedAt | date:'dd/MM/yyyy' }}</span>
+            </div>
+            @if (v.receivedByName) {
+              <div class="info-item">
+                <span class="label">Dicatat oleh</span>
+                <span class="value">{{ v.receivedByName }}</span>
+              </div>
+            }
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-    <!-- Lines table -->
     <mat-card class="lines-card">
       <mat-card-header><mat-card-title>Baris Item</mat-card-title></mat-card-header>
       <mat-card-content>
@@ -178,19 +144,93 @@
                 <td>{{ l.unit }}</td>
                 <td class="num">Rp {{ l.unitPrice | number:'1.0-0' }}</td>
                 <td class="center">{{ l.ppnIncluded ? 'Include' : 'Exclude' }}</td>
-                <td class="num strong">Rp {{ lineTotal(l.unitPrice, l.qty, l.ppnIncluded) | number:'1.0-0' }}</td>
+                <td class="num strong">Rp {{ l.lineAmount | number:'1.0-0' }}</td>
               </tr>
             }
           </tbody>
           <tfoot>
             <tr class="total-row">
               <td colspan="7" class="text-right">Grand Total</td>
-              <td class="num strong">Rp {{ grandTotal() | number:'1.0-0' }}</td>
+              <td class="num strong">Rp {{ grandTotalAmount() | number:'1.0-0' }}</td>
             </tr>
           </tfoot>
         </table>
       </mat-card-content>
     </mat-card>
+
+    @if (hasTerms()) {
+      <mat-card class="section-card">
+        <mat-card-header><mat-card-title>Termin Pembayaran</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <table mat-table [dataSource]="v.paymentTerms" class="terms-table full-width">
+            <ng-container matColumnDef="termNo">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let t">{{ t.termNo }}</td>
+            </ng-container>
+            <ng-container matColumnDef="label">
+              <th mat-header-cell *matHeaderCellDef>Label</th>
+              <td mat-cell *matCellDef="let t">{{ t.label || ('Termin ' + t.termNo) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>Jumlah</th>
+              <td mat-cell *matCellDef="let t">{{ termAmountLabel(t, grandTotalAmount()) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="termDays">
+              <th mat-header-cell *matHeaderCellDef>Hari sejak pemicu</th>
+              <td mat-cell *matCellDef="let t">{{ t.termDays }} hari</td>
+            </ng-container>
+            <ng-container matColumnDef="dueDate">
+              <th mat-header-cell *matHeaderCellDef>Jatuh tempo</th>
+              <td mat-cell *matCellDef="let t">
+                @if (t.dueDate) {
+                  {{ t.dueDate | date:'dd/MM/yyyy' }}
+                } @else {
+                  <span class="muted">
+                    @if (v.paymentTermTrigger === 'AFTER_GOODS_RECEIVED' && !v.receivedAt) {
+                      Menunggu penerimaan
+                    } @else {
+                      —
+                    }
+                  </span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let t">
+                @if (t.paidAt) {
+                  <span class="term-badge term-badge--paid">
+                    <mat-icon>check_circle</mat-icon>
+                    Lunas {{ t.paidAt | date:'dd/MM/yyyy' }}
+                  </span>
+                } @else {
+                  <span class="term-badge term-badge--open">Belum lunas</span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let t">
+                @if (v.status !== 'CANCELLED' && v.status !== 'DRAFT') {
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    [color]="t.paidAt ? 'warn' : 'primary'"
+                    (click)="toggleTermPaid(t)"
+                    [disabled]="busy()"
+                    class="btn-term-paid"
+                  >
+                    {{ t.paidAt ? 'Batalkan lunas' : 'Tandai lunas' }}
+                  </button>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="termColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: termColumns" [class.term-row--paid]="row.paidAt"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    }
 
     <div class="back-action">
       <a mat-stroked-button routerLink="/vendor-pos">

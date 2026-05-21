@@ -10,6 +10,7 @@ import {
   RecordReceiptInput,
 } from '../models/customer-po.model';
 
+
 @Injectable({ providedIn: 'root' })
 export class CustomerPoService {
   private readonly http = inject(HttpClient);
@@ -56,6 +57,12 @@ export class CustomerPoService {
   recordReceipt(id: number, input: RecordReceiptInput): Observable<CustomerPo> {
     return this.http
       .post<{ data: CustomerPo }>(`${this.url}/${id}/record-receipt`, input)
+      .pipe(map((r) => r.data));
+  }
+
+  markTermPaid(poId: number, termId: number, paidAt: string | null): Observable<CustomerPo> {
+    return this.http
+      .patch<{ data: CustomerPo }>(`${this.url}/${poId}/terms/${termId}/paid`, { paidAt })
       .pipe(map((r) => r.data));
   }
 

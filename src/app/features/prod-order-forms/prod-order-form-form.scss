@@ -124,3 +124,13 @@
   text-align: center;
   color: #8a8278;
 }
+
+.hint-warn {
+  color: #b16a3e;
+  line-height: 1.4;
+
+  a {
+    color: #b16a3e;
+    font-weight: 600;
+  }
+}

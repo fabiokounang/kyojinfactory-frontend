@@ -60,21 +60,14 @@
             <span class="value">{{ formatDate(po()!.poDate) }}</span>
           </div>
           <div class="meta-item">
-            <span class="label">Aturan termin</span>
-            <span class="value">{{ paymentTermLabel(po()!) }}</span>
+            <span class="label">Pemicu termin</span>
+            <span class="value">
+              {{ po()!.paymentTermTrigger === 'AFTER_PO_ISSUED' ? 'Sejak tanggal PO terbit' : 'Sejak customer terima barang' }}
+            </span>
           </div>
           <div class="meta-item">
-            <span class="label">Jatuh tempo</span>
-            @if (po()!.dueDate) {
-              <span class="value value--strong">{{ formatDateTime(po()!.dueDate) }}</span>
-            } @else if (po()!.paymentTermTrigger === 'AFTER_GOODS_RECEIVED') {
-              <span class="badge-waiting">
-                <mat-icon>hourglass_empty</mat-icon>
-                Menunggu penerimaan barang
-              </span>
-            } @else {
-              <span class="value muted">{{ emptyText }}</span>
-            }
+            <span class="label">Termin pembayaran</span>
+            <span class="value">{{ paymentTermLabel(po()!) }}</span>
           </div>
           <div class="meta-item">
             <span class="label">Tarif PPN</span>
@@ -91,6 +84,73 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    @if (hasTerms()) {
+      <mat-card class="section-card">
+        <mat-card-header><mat-card-title>Termin Pembayaran</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <table mat-table [dataSource]="po()!.paymentTerms" class="terms-table full-width">
+            <ng-container matColumnDef="termNo">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let t">{{ t.termNo }}</td>
+            </ng-container>
+            <ng-container matColumnDef="label">
+              <th mat-header-cell *matHeaderCellDef>Label</th>
+              <td mat-cell *matCellDef="let t">{{ t.label || ('Termin ' + t.termNo) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>Jumlah</th>
+              <td mat-cell *matCellDef="let t">{{ termAmountLabel(t, total()) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="termDays">
+              <th mat-header-cell *matHeaderCellDef>Hari sejak pemicu</th>
+              <td mat-cell *matCellDef="let t">{{ t.termDays }} hari</td>
+            </ng-container>
+            <ng-container matColumnDef="dueDate">
+              <th mat-header-cell *matHeaderCellDef>Jatuh tempo</th>
+              <td mat-cell *matCellDef="let t">
+                @if (t.dueDate) {
+                  {{ formatDate(t.dueDate) }}
+                } @else {
+                  <span class="muted">Menunggu penerimaan</span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let t">
+                @if (t.paidAt) {
+                  <span class="term-badge term-badge--paid">
+                    <mat-icon>check_circle</mat-icon>
+                    Lunas {{ formatDate(t.paidAt) }}
+                  </span>
+                } @else {
+                  <span class="term-badge term-badge--open">Belum lunas</span>
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let t">
+                @if (po()!.status !== 'CANCELLED' && po()!.status !== 'DRAFT') {
+                  <button
+                    mat-stroked-button type="button"
+                    [color]="t.paidAt ? 'warn' : 'primary'"
+                    (click)="toggleTermPaid(t)"
+                    [disabled]="busy()"
+                    class="btn-term-paid"
+                  >
+                    {{ t.paidAt ? 'Batalkan lunas' : 'Tandai lunas' }}
+                  </button>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="termColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: termColumns" [class.term-row--paid]="row.paidAt"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    }
 
     <mat-card class="section-card">
       <mat-card-header><mat-card-title>Item pesanan</mat-card-title></mat-card-header>

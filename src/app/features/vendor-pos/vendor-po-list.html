@@ -58,9 +58,9 @@
               <span class="vpo-badge vpo-badge--{{ r.status | lowercase }}">{{ r.statusLabel }}</span>
             </td>
           </ng-container>
-          <ng-container matColumnDef="paymentMode">
+          <ng-container matColumnDef="paymentTerm">
             <th mat-header-cell *matHeaderCellDef>Termin</th>
-            <td mat-cell *matCellDef="let r">{{ paymentModeLabel(r.paymentMode) }}</td>
+            <td mat-cell *matCellDef="let r">{{ paymentTermLabel(r) }}</td>
           </ng-container>
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
@@ -68,10 +68,12 @@
               <a mat-icon-button [routerLink]="['/vendor-pos', r.id]" matTooltip="Lihat detail">
                 <mat-icon>visibility</mat-icon>
               </a>
-              @if (r.status === 'DRAFT') {
+              @if (canEditPo(r)) {
                 <a mat-icon-button [routerLink]="['/vendor-pos', r.id, 'edit']" matTooltip="Edit">
                   <mat-icon>edit</mat-icon>
                 </a>
+              }
+              @if (canDeletePo(r)) {
                 <button mat-icon-button color="warn" (click)="deleteDraft(r)" matTooltip="Hapus">
                   <mat-icon>delete</mat-icon>
                 </button>

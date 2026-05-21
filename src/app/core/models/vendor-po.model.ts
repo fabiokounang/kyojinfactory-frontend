@@ -1,4 +1,14 @@
+import type {
+  PaymentTerm,
+  PaymentTermAmountType,
+  PaymentTermInput,
+  PaymentTermTrigger,
+} from './customer-po.model';
+
+export type { PaymentTerm, PaymentTermAmountType, PaymentTermInput, PaymentTermTrigger };
+
 export type VendorPoStatus = 'DRAFT' | 'CONFIRMED' | 'RECEIVED' | 'COMPLETED' | 'CANCELLED';
+/** @deprecated legacy header field; use paymentTerms */
 export type PaymentMode = 'UPFRONT' | 'DP_THEN_RECEIPT' | 'ON_RECEIPT';
 
 export interface VendorPoLine {
@@ -28,7 +38,8 @@ export interface VendorPo {
   vendorRef: string | null;
   poDate: string;
   vendor: VendorPoVendor;
-  paymentMode: PaymentMode;
+  paymentTermTrigger: PaymentTermTrigger;
+  paymentMode?: PaymentMode;
   dpAmount: number | null;
   dpDueDate: string | null;
   balanceDueDate: string | null;
@@ -47,6 +58,7 @@ export interface VendorPo {
   createdAt: string;
   updatedAt: string;
   lines: VendorPoLine[];
+  paymentTerms: PaymentTerm[];
 }
 
 export interface VendorPoLineInput {
@@ -63,11 +75,10 @@ export interface VendorPoInput {
   vendorId: number;
   poDate: string;
   vendorRef?: string | null;
-  paymentMode: PaymentMode;
-  paymentTermDays: number;
-  dpAmount?: number | null;
+  paymentTermTrigger: PaymentTermTrigger;
   notes?: string | null;
   lines: VendorPoLineInput[];
+  paymentTerms: PaymentTermInput[];
 }
 
 export interface ReceiptInput {

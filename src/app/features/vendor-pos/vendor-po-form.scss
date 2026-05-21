@@ -27,37 +27,220 @@
   .span-3 { grid-column: span 3; }
 }
 
-.payment-mode-row {
+.lines-card__header {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 16px;
-
-  .mode-label { font-weight: 500; padding-top: 10px; white-space: nowrap; }
-  .mode-group { display: flex; flex-direction: column; gap: 8px; }
-}
-
-.term-fields {
-  display: flex;
-  gap: 16px;
   flex-wrap: wrap;
-  margin: 16px 0;
-
-  mat-form-field { min-width: 200px; }
-}
-
-.payment-hint {
-  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: #e3f2fd;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  color: #1565c0;
-  margin-top: 8px;
+  width: 100%;
+}
 
-  mat-icon { font-size: 18px; height: 18px; width: 18px; }
+.terms-card mat-card-content {
+  padding-top: 4px;
+}
+
+.terms-warning {
+  font-size: 12px;
+  color: #c62828;
+  font-weight: 600;
+  margin-left: auto;
+  padding: 4px 10px;
+  background: #ffebee;
+  border-radius: 6px;
+}
+
+.terms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #efe9dd;
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6f6960;
+    white-space: nowrap;
+  }
+
+  &__field {
+    width: 240px;
+    margin: 0;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: #8a8278;
+    flex: 1;
+    min-width: 160px;
+  }
+}
+
+.terms-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e8e2d8;
+  border-radius: 8px;
+  background: #fffdfb;
+}
+
+.terms-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+
+  thead th {
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #8a8278;
+    background: #f5f0eb;
+    border-bottom: 1px solid #e8e2d8;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #efe9dd;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: #faf8f5;
+    }
+  }
+
+  td {
+    padding: 6px 8px;
+    vertical-align: middle;
+  }
+
+  .col-no { width: 36px; text-align: center; }
+  .col-label { width: 28%; min-width: 120px; }
+  .col-type { width: 88px; }
+  .col-value { width: 110px; }
+  .col-days { width: 64px; }
+  .col-est { width: 108px; }
+  .col-act { width: 44px; text-align: center; }
+}
+
+.term-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #b16a3e;
+  background: #fff3e8;
+  border-radius: 4px;
+}
+
+.term-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d4cdc3;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #3d3832;
+  background: #fff;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #b16a3e;
+    box-shadow: 0 0 0 2px rgb(177 106 62 / 18%);
+  }
+
+  &--num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--days {
+    text-align: center;
+    padding: 0 6px;
+  }
+}
+
+.term-input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .term-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.term-input-suffix {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8a8278;
+  min-width: 18px;
+}
+
+.term-type-toggle {
+  height: 36px;
+
+  ::ng-deep .mat-button-toggle-label-content {
+    line-height: 34px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+.term-date {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #b16a3e;
+  white-space: nowrap;
+
+  &--empty {
+    color: #c4bdb3;
+    font-weight: 400;
+  }
+}
+
+.term-del {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: #a39b92;
+
+  mat-icon {
+    font-size: 18px;
+  }
+
+  &:not(:disabled):hover {
+    color: #c62828;
+  }
+}
+
+.lines-add {
+  margin-top: 12px;
+
+  &__btn mat-icon {
+    margin-right: 4px;
+  }
 }
 
 // Line cards

@@ -132,3 +132,49 @@
 .back-action { margin-top: 12px; }
 
 .req { color: #e53935; }
+
+.terms-table {
+  font-size: 14px;
+}
+
+.term-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  &--paid {
+    background: #d8ecdf;
+    color: #2e7d32;
+  }
+
+  &--open {
+    background: #ffe8c8;
+    color: #a15c00;
+  }
+}
+
+.term-row--paid td {
+  color: #8a8278;
+}
+
+.btn-term-paid {
+  font-size: 12px;
+  height: 28px;
+  line-height: 28px;
+  padding: 0 10px;
+}
+
+.muted {
+  color: #8a8278;
+  font-style: italic;
+}

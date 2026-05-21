@@ -49,4 +49,10 @@ export class VendorPoService {
   cancel(id: number): Observable<VendorPo> {
     return this.http.post<{ data: VendorPo }>(`${this.url}/${id}/cancel`, {}).pipe(map((r) => r.data));
   }
+
+  markTermPaid(id: number, termId: number, paidAt: string | null): Observable<VendorPo> {
+    return this.http
+      .patch<{ data: VendorPo }>(`${this.url}/${id}/terms/${termId}/paid`, { paidAt })
+      .pipe(map((r) => r.data));
+  }
 }

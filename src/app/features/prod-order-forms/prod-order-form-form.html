@@ -25,13 +25,26 @@
               <mat-select formControlName="customerPoId" (selectionChange)="onPoChange($event.value)">
                 <mat-option [value]="0" disabled>— Pilih PO Customer —</mat-option>
                 @for (po of eligiblePos(); track po.id) {
-                  <mat-option [value]="po.id">
+                  <mat-option [value]="po.id" [disabled]="!po.isReady">
                     {{ po.poNumber }} — {{ po.customer.name }}
+                    @if (!po.isReady) {
+                      (BOM {{ po.linesWithBom }}/{{ po.linesTotal }})
+                    }
                   </mat-option>
                 }
               </mat-select>
+              @if (eligiblePos().length === 0) {
+                <mat-hint class="hint-warn">
+                  Belum ada PO Customer yang dikonfirmasi. Buat & simpan PO Customer dulu.
+                </mat-hint>
+              } @else if (!hasReadyPo()) {
+                <mat-hint class="hint-warn">
+                  Ada {{ eligiblePos().length }} PO, tapi BOM ACTIVE belum lengkap.
+                  <a routerLink="/tasks">Buka Todo BOM</a> dulu.
+                </mat-hint>
+              }
               @if (form.controls.customerPoId.invalid && form.controls.customerPoId.touched) {
-                <mat-error>Pilih PO Customer terlebih dahulu</mat-error>
+                <mat-error>Pilih PO Customer yang sudah siap (BOM lengkap)</mat-error>
               }
             </mat-form-field>
 

@@ -17,7 +17,7 @@ import { MatDividerModule } from '@angular/material/divider';
 
 import { CustomerPoService } from '../../core/services/customer-po.service';
 import { AuthService } from '../../core/services/auth.service';
-import { CustomerPo, PoLine, PoStatus } from '../../core/models/customer-po.model';
+import { CustomerPo, PaymentTerm, PoLine, PoStatus } from '../../core/models/customer-po.model';
 import { lineTaxBreakdown } from '../../core/utils/ppn.util';
 import { formatTableDate, formatTableDateTime } from '../../core/utils/date.util';
 
@@ -65,8 +65,15 @@ export class CustomerPoDetailComponent {
   readonly formatDateTime = formatTableDateTime;
 
   readonly lineColumns = ['lineNo', 'itemName', 'itemCode', 'stdSize', 'qty', 'unit', 'unitPrice', 'ppn', 'lineAmount'];
+  readonly termColumns = ['termNo', 'label', 'amount', 'termDays', 'dueDate', 'status', 'actions'];
 
-  readonly canEdit = computed(() => this.auth.isSuperAdmin() && this.po()?.status === 'DRAFT');
+  readonly canEdit = computed(() => {
+    const s = this.po()?.status;
+    return (
+      this.auth.isSuperAdmin() &&
+      (s === 'DRAFT' || s === 'CONFIRMED' || s === 'IN_PRODUCTION')
+    );
+  });
   readonly canDelete = computed(() => this.auth.isSuperAdmin() && this.po()?.status === 'DRAFT');
   readonly canConfirm = computed(() => this.po()?.status === 'DRAFT');
   readonly canCancel = computed(() => {
@@ -83,6 +90,16 @@ export class CustomerPoDetailComponent {
       po.status !== 'CANCELLED'
     );
   });
+
+  readonly hasTerms = computed(() => (this.po()?.paymentTerms?.length ?? 0) > 0);
+
+  termAmountLabel(t: PaymentTerm, total: number): string {
+    if (t.amountType === 'PERCENT') {
+      const rp = total * (t.amountValue / 100);
+      return `${t.amountValue}% ≈ Rp ${rp.toLocaleString('id-ID', { maximumFractionDigits: 0 })}`;
+    }
+    return `Rp ${Number(t.amountValue).toLocaleString('id-ID', { maximumFractionDigits: 0 })}`;
+  }
 
   readonly total = computed(() => {
     const po = this.po();
@@ -126,7 +143,29 @@ export class CustomerPoDetailComponent {
       po.paymentTermTrigger === 'AFTER_PO_ISSUED'
         ? 'tanggal PO terbit'
         : 'tanggal customer terima barang';
-    return `${po.paymentTermDays} hari sejak ${trigger}`;
+    const count = po.paymentTerms?.length ?? 0;
+    return count > 0
+      ? `${count} termin sejak ${trigger}`
+      : `${po.paymentTermDays} hari sejak ${trigger}`;
+  }
+
+  toggleTermPaid(t: PaymentTerm): void {
+    const po = this.po();
+    if (!po) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const newPaidAt = t.paidAt ? null : today;
+    this.busy.set(true);
+    this.poService.markTermPaid(po.id, t.id, newPaidAt).subscribe({
+      next: (updated) => {
+        this.po.set(updated);
+        this.busy.set(false);
+        this.snackBar.open(newPaidAt ? 'Termin ditandai lunas' : 'Tandai lunas dibatalkan', 'OK', { duration: 3000 });
+      },
+      error: (err: HttpErrorResponse) => {
+        this.busy.set(false);
+        this.snackBar.open(err.error?.message || 'Gagal', 'Tutup', { duration: 4000 });
+      },
+    });
   }
 
   constructor() {

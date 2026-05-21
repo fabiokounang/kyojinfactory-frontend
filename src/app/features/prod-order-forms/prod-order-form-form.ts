@@ -69,6 +69,7 @@ export class ProdOrderFormFormComponent {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly eligiblePos = signal<EligibleCustomerPo[]>([]);
+  readonly hasReadyPo = computed(() => this.eligiblePos().some((p) => p.isReady));
   readonly assignees = signal<UserAssignee[]>([]);
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -131,7 +132,15 @@ export class ProdOrderFormFormComponent {
     const alreadyInList = eligible.some((e) => e.id === pof.customerPoId);
     if (!alreadyInList) {
       this.eligiblePos.update((list) => [
-        { id: pof.customerPoId, poNumber: pof.poNumber, poDate: '', customer: pof.customer },
+        {
+          id: pof.customerPoId,
+          poNumber: pof.poNumber,
+          poDate: '',
+          customer: pof.customer,
+          linesTotal: pof.lines.length,
+          linesWithBom: pof.lines.filter((l) => l.bomVersionId).length,
+          isReady: true,
+        },
         ...list,
       ]);
     }
@@ -162,6 +171,18 @@ export class ProdOrderFormFormComponent {
 
   onPoChange(poId: number): void {
     if (!poId) return;
+    const po = this.eligiblePos().find((p) => p.id === poId);
+    if (po && !po.isReady) {
+      this.form.controls.customerPoId.setValue(0);
+      this.prefill.set(null);
+      this.linesArray.clear();
+      this.snackBar.open(
+        `PO ${po.poNumber} belum siap: BOM ACTIVE ${po.linesWithBom}/${po.linesTotal} item. Selesaikan todo BOM dulu.`,
+        'Tutup',
+        { duration: 6000 }
+      );
+      return;
+    }
     this.pofService.prefill(poId).subscribe({
       next: (data) => {
         this.prefill.set(data);

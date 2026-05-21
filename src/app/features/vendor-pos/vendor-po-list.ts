@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe, LowerCasePipe } from '@angular/common';
 
 import { VendorPoService } from '../../core/services/vendor-po.service';
+import { AuthService } from '../../core/services/auth.service';
 import { VendorPo, VendorPoStatus } from '../../core/models/vendor-po.model';
 
 const STATUS_OPTS: { label: string; value: string }[] = [
@@ -49,13 +50,14 @@ const STATUS_OPTS: { label: string; value: string }[] = [
 export class VendorPoListComponent {
   private readonly vpoService = inject(VendorPoService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly auth = inject(AuthService);
 
   readonly statusOpts = STATUS_OPTS;
   readonly rows = signal<VendorPo[]>([]);
   readonly loading = signal(true);
   readonly search = signal('');
   readonly filterStatus = signal<string>('');
-  readonly displayedColumns = ['poNumber', 'poDate', 'vendor', 'status', 'paymentMode', 'actions'];
+  readonly displayedColumns = ['poNumber', 'poDate', 'vendor', 'status', 'paymentTerm', 'actions'];
 
   constructor() { this.load(); }
 
@@ -70,13 +72,19 @@ export class VendorPoListComponent {
   onSearch(val: string): void { this.search.set(val); this.load(); }
   onStatusFilter(val: string): void { this.filterStatus.set(val); this.load(); }
 
-  paymentModeLabel(mode: string): string {
-    const labels: Record<string, string> = {
-      UPFRONT: 'Lunas di muka',
-      DP_THEN_RECEIPT: 'DP + pelunasan',
-      ON_RECEIPT: 'Bayar saat terima',
-    };
-    return labels[mode] ?? mode;
+  canEditPo(v: VendorPo): boolean {
+    return this.auth.isSuperAdmin() && (v.status === 'CONFIRMED' || v.status === 'DRAFT');
+  }
+
+  canDeletePo(v: VendorPo): boolean {
+    return this.auth.isSuperAdmin() && v.status === 'DRAFT';
+  }
+
+  paymentTermLabel(v: VendorPo): string {
+    const trigger =
+      v.paymentTermTrigger === 'AFTER_PO_ISSUED' ? 'PO terbit' : 'terima barang';
+    const n = v.paymentTerms?.length ?? 0;
+    return n > 0 ? `${n} termin · ${trigger}` : `${v.paymentTermDays} hari · ${trigger}`;
   }
 
   deleteDraft(vpo: VendorPo): void {

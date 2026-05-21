@@ -48,6 +48,9 @@ export interface EligibleCustomerPo {
   poNumber: string;
   poDate: string;
   customer: { id: number; code: string; name: string };
+  linesTotal: number;
+  linesWithBom: number;
+  isReady: boolean;
 }
 
 export interface PrefillLine {

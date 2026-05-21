@@ -1,5 +1,26 @@
 export type PoStatus = 'DRAFT' | 'CONFIRMED' | 'IN_PRODUCTION' | 'COMPLETED' | 'CANCELLED';
 export type PaymentTermTrigger = 'AFTER_PO_ISSUED' | 'AFTER_GOODS_RECEIVED';
+export type PaymentTermAmountType = 'PERCENT' | 'FIXED';
+
+export interface PaymentTerm {
+  id: number;
+  termNo: number;
+  label: string | null;
+  amountType: PaymentTermAmountType;
+  amountValue: number;
+  termDays: number;
+  dueDate: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentTermInput {
+  label?: string | null;
+  amountType: PaymentTermAmountType;
+  amountValue: number;
+  termDays: number;
+}
 
 export interface PoLine {
   id: number;
@@ -38,6 +59,7 @@ export interface CustomerPo extends CustomerPoSummary {
   customerReceivedBy: number | null;
   updatedAt: string;
   lines: PoLine[];
+  paymentTerms: PaymentTerm[];
 }
 
 export interface RecordReceiptInput {
@@ -59,7 +81,8 @@ export interface CustomerPoInput {
   customerPoRef?: string | null;
   poDate: string;
   paymentTermTrigger: PaymentTermTrigger;
-  paymentTermDays: number;
+  paymentTermDays?: number;
   notes?: string | null;
   lines: PoLineInput[];
+  paymentTerms?: PaymentTermInput[];
 }

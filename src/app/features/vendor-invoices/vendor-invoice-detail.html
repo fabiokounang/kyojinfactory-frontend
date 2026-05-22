@@ -1,0 +1,51 @@
+<div class="page">
+  @if (inv()) {
+    <div class="page-header">
+      <div>
+        <a mat-button routerLink="/vendor-invoices"><mat-icon>arrow_back</mat-icon> Daftar Faktur</a>
+        <h1>{{ inv()!.invoiceNumber }}</h1>
+        <p class="subtitle">
+          {{ inv()!.vendor.name }}
+          @if (inv()!.vendorInvoiceNumber) { · No vendor: {{ inv()!.vendorInvoiceNumber }} }
+          · PO <a [routerLink]="['/vendor-pos', inv()!.vendorPoId]">{{ inv()!.poNumber }}</a>
+        </p>
+      </div>
+      <div class="actions">
+        <span class="inv-badge inv-badge--{{ inv()!.status | lowercase }}">{{ inv()!.statusLabel }}</span>
+        @if (inv()!.status === 'DRAFT') {
+          <a mat-stroked-button [routerLink]="['/vendor-invoices', inv()!.id, 'edit']"><mat-icon>edit</mat-icon> Ubah</a>
+          <button mat-flat-button color="primary" (click)="verify()" [disabled]="busy()"><mat-icon>verified</mat-icon> Verifikasi</button>
+          <button mat-stroked-button color="warn" (click)="deleteInv()"><mat-icon>delete</mat-icon> Hapus</button>
+        }
+        @if (inv()!.status === 'VERIFIED') {
+          <button mat-flat-button color="primary" (click)="markPaid()" [disabled]="busy()"><mat-icon>payments</mat-icon> Tandai Lunas</button>
+        }
+        @if (inv()!.status === 'DRAFT' || inv()!.status === 'VERIFIED') {
+          <button mat-stroked-button color="warn" (click)="cancel()" [disabled]="busy()"><mat-icon>cancel</mat-icon> Batalkan</button>
+        }
+      </div>
+    </div>
+
+    <mat-card class="section-card">
+      <mat-card-content>
+        <div class="meta-grid">
+          <div class="meta-item"><span class="label">Tgl Terima</span><span class="value">{{ inv()!.receivedDate ? (inv()!.receivedDate | date:'dd/MM/yyyy') : '—' }}</span></div>
+          <div class="meta-item"><span class="label">Tanggal Faktur</span><span class="value">{{ inv()!.invoiceDate | date:'dd/MM/yyyy' }}</span></div>
+          <div class="meta-item"><span class="label">Jatuh Tempo</span><span class="value">{{ inv()!.dueDate ? (inv()!.dueDate | date:'dd/MM/yyyy') : '—' }}</span></div>
+          <div class="meta-item"><span class="label">Termin</span><span class="value">{{ inv()!.termLabel || 'Full PO' }}</span></div>
+          <div class="meta-item"><span class="label">DPP</span><span class="value">Rp {{ inv()!.subtotal | number:'1.0-0' }}</span></div>
+          <div class="meta-item"><span class="label">PPN ({{ inv()!.ppnRate }}%)</span><span class="value">Rp {{ inv()!.ppnAmount | number:'1.0-0' }}</span></div>
+          <div class="meta-item"><span class="label">Total</span><span class="value value--bold">Rp {{ inv()!.total | number:'1.0-0' }}</span></div>
+          @if (inv()!.paidAt) {
+            <div class="meta-item"><span class="label">Tgl Lunas</span><span class="value">{{ inv()!.paidAt | date:'dd/MM/yyyy' }}</span></div>
+          }
+          @if (inv()!.notes) {
+            <div class="meta-item meta-item--full"><span class="label">Catatan</span><span class="value">{{ inv()!.notes }}</span></div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  } @else if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  }
+</div>

@@ -1,0 +1,316 @@
+// Shared styles for customer & vendor invoice forms
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 8px;
+    padding: 0 4px;
+    font-size: 0.875rem;
+    color: #6f6960;
+    text-decoration: none;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      color: #3d3830;
+    }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c2824;
+  }
+
+  p {
+    margin: 6px 0 0;
+    font-size: 0.875rem;
+    color: #8a8278;
+  }
+}
+
+.alert--error {
+  background: #ffebee;
+  color: #b71c1c;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+}
+
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.section-card {
+  margin-bottom: 20px;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 4px rgba(44, 40, 36, 0.06) !important;
+
+  mat-card-header {
+    padding: 20px 24px 0;
+    margin-bottom: 0;
+  }
+
+  mat-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #3d3830;
+  }
+
+  mat-card-content {
+    padding: 16px 24px 24px !important;
+  }
+}
+
+.form-section {
+  &:not(:first-child) {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #efe9dd;
+  }
+
+  &__title {
+    margin: 0 0 16px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8a8278;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px 20px;
+  align-items: start;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .span-2 {
+    grid-column: 1 / -1;
+  }
+
+  &--dates {
+    margin-bottom: 8px;
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+// Compact mat-form-field — remove extra subscript gap when no hint/error
+mat-form-field {
+  width: 100%;
+  margin-bottom: 4px;
+
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    height: 18px;
+  }
+}
+
+.info-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 12px 16px;
+  background: #f7f3ed;
+  border: 1px solid #e8e0d4;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #5c564e;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #b16a3e;
+    flex-shrink: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+
+    .label {
+      color: #8a8278;
+      font-size: 0.8125rem;
+    }
+
+    .value {
+      font-weight: 600;
+      color: #2c2824;
+    }
+  }
+
+  &__sep {
+    color: #d4cdc3;
+    user-select: none;
+  }
+}
+
+.amount-box {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 20px 22px;
+  background: #fdfbf8;
+  border: 1px solid #e8e0d4;
+  border-radius: 10px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: minmax(240px, 1fr) minmax(200px, 1fr);
+    align-items: center;
+  }
+
+  &__input {
+    margin-bottom: 0;
+    width: 100%;
+
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper {
+        background: #fff;
+      }
+
+      .mat-mdc-form-field-infix {
+        min-height: 52px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        display: flex;
+        align-items: center;
+      }
+
+      .mat-mdc-form-field-text-prefix {
+        padding-right: 10px;
+        align-self: center;
+      }
+
+      .amount-prefix {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: #6f6960;
+        letter-spacing: 0.02em;
+      }
+
+      input.amount-input {
+        text-align: right;
+        font-size: 1.125rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: #2c2824;
+        letter-spacing: 0.02em;
+
+        &::placeholder {
+          color: #c4bdb3;
+          font-weight: 400;
+        }
+
+        /* hide number spinners */
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        -moz-appearance: textfield;
+      }
+    }
+  }
+
+  &__breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid #efe9dd;
+    border-radius: 8px;
+
+    @media (min-width: 640px) {
+      min-height: 52px;
+      justify-content: center;
+    }
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    color: #6f6960;
+
+    span:last-child {
+      font-weight: 500;
+      color: #3d3830;
+    }
+
+    &--total {
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px dashed #e8e0d4;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #2c2824;
+
+      span:last-child {
+        font-weight: 700;
+        color: #b16a3e;
+      }
+    }
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid #efe9dd;
+
+  button mat-spinner,
+  a mat-spinner {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  button mat-icon,
+  a mat-icon {
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+}
+
+.empty-po-hint {
+  grid-column: 1 / -1;
+  padding: 20px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #8a8278;
+  background: #faf8f5;
+  border: 1px dashed #e8e0d4;
+  border-radius: 10px;
+}

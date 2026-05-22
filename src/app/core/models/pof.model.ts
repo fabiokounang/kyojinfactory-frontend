@@ -1,4 +1,4 @@
-export type PofStatus = 'DRAFT' | 'RELEASED' | 'CANCELLED';
+export type PofStatus = 'DRAFT' | 'RELEASED' | 'COMPLETED' | 'CANCELLED';
 
 export interface PofLine {
   id: number;
@@ -9,6 +9,8 @@ export interface PofLine {
   itemName: string;
   cpoQty: number | null;
   qtyToProduce: number;
+  qtyProduced: number;
+  remainingOnPofLine: number;
   unit: string;
   bomVersionId: number | null;
   bomVersionName: string | null;
@@ -51,6 +53,10 @@ export interface EligibleCustomerPo {
   linesTotal: number;
   linesWithBom: number;
   isReady: boolean;
+  hasRemaining: boolean;
+  remainingQty: number;
+  allocatedQty: number;
+  poQty: number;
 }
 
 export interface PrefillLine {
@@ -59,6 +65,9 @@ export interface PrefillLine {
   itemName: string;
   productNumber: string;
   cpoQty: number;
+  poQty: number;
+  allocatedQty: number;
+  remainingQty: number;
   unit: string;
   masterItemId: number | null;
   bomVersionId: number | null;

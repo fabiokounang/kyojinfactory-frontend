@@ -18,10 +18,11 @@ export class PofService {
   private readonly url = `${environment.apiUrl}/prod-order-forms`;
   private readonly usersUrl = `${environment.apiUrl}/users`;
 
-  list(opts: { status?: string; search?: string } = {}): Observable<PofSummary[]> {
+  list(opts: { status?: string; search?: string; customerPoId?: number } = {}): Observable<PofSummary[]> {
     let params = new HttpParams();
     if (opts.status) params = params.set('status', opts.status);
     if (opts.search) params = params.set('search', opts.search);
+    if (opts.customerPoId) params = params.set('customerPoId', String(opts.customerPoId));
     return this.http.get<{ data: PofSummary[] }>(this.url, { params }).pipe(map((r) => r.data));
   }
 
@@ -59,6 +60,12 @@ export class PofService {
 
   cancel(id: number): Observable<Pof> {
     return this.http.post<{ data: Pof }>(`${this.url}/${id}/cancel`, {}).pipe(map((r) => r.data));
+  }
+
+  recordProduction(pofId: number, lineId: number, qtyProduced: number): Observable<Pof> {
+    return this.http
+      .patch<{ data: Pof }>(`${this.url}/${pofId}/lines/${lineId}/production`, { qtyProduced })
+      .pipe(map((r) => r.data));
   }
 
   assignees(): Observable<UserAssignee[]> {

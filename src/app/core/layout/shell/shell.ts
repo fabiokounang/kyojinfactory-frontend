@@ -53,6 +53,8 @@ export class ShellComponent {
     { path: '/prod-order-forms', label: 'Prod Order Form', icon: 'precision_manufacturing' },
     { path: '/vendors',     label: 'Vendor',    icon: 'store' },
     { path: '/vendor-pos',  label: 'PO Vendor', icon: 'shopping_cart' },
+    { path: '/customer-invoices', label: 'Faktur Penjualan', icon: 'request_quote' },
+    { path: '/vendor-invoices', label: 'Faktur Pembelian', icon: 'receipt' },
     { path: '/tasks', label: 'Todo / Reminder', icon: 'task_alt' },
     { path: '/master-items', label: 'Master Item', icon: 'inventory_2' },
     { path: '/settings', label: 'Pengaturan', icon: 'settings' },

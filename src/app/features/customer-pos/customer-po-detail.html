@@ -275,6 +275,20 @@
       </mat-card>
     }
 
+    @if (po()!.status === 'CONFIRMED' || po()!.status === 'IN_PRODUCTION' || po()!.status === 'COMPLETED') {
+      <mat-card class="section-card">
+        <mat-card-header><mat-card-title>Faktur Penjualan</mat-card-title></mat-card-header>
+        <mat-card-content class="link-row">
+          <a mat-stroked-button [routerLink]="['/customer-invoices']" [queryParams]="{ customerPoId: po()!.id }">
+            <mat-icon>request_quote</mat-icon> Lihat faktur untuk PO ini
+          </a>
+          <a mat-flat-button color="primary" routerLink="/customer-invoices/new">
+            <mat-icon>add</mat-icon> Buat faktur
+          </a>
+        </mat-card-content>
+      </mat-card>
+    }
+
     @if (po()!.status === 'CONFIRMED' || po()!.status === 'IN_PRODUCTION') {
       <mat-card class="next-step">
         <mat-card-content>

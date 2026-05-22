@@ -140,6 +140,62 @@ export const routes: Routes = [
           import('./features/vendor-pos/vendor-po-detail').then((m) => m.VendorPoDetailComponent),
       },
       {
+        path: 'customer-invoices',
+        loadComponent: () =>
+          import('./features/customer-invoices/customer-invoice-list').then(
+            (m) => m.CustomerInvoiceListComponent
+          ),
+      },
+      {
+        path: 'customer-invoices/new',
+        loadComponent: () =>
+          import('./features/customer-invoices/customer-invoice-form').then(
+            (m) => m.CustomerInvoiceFormComponent
+          ),
+      },
+      {
+        path: 'customer-invoices/:id/edit',
+        loadComponent: () =>
+          import('./features/customer-invoices/customer-invoice-form').then(
+            (m) => m.CustomerInvoiceFormComponent
+          ),
+      },
+      {
+        path: 'customer-invoices/:id',
+        loadComponent: () =>
+          import('./features/customer-invoices/customer-invoice-detail').then(
+            (m) => m.CustomerInvoiceDetailComponent
+          ),
+      },
+      {
+        path: 'vendor-invoices',
+        loadComponent: () =>
+          import('./features/vendor-invoices/vendor-invoice-list').then(
+            (m) => m.VendorInvoiceListComponent
+          ),
+      },
+      {
+        path: 'vendor-invoices/new',
+        loadComponent: () =>
+          import('./features/vendor-invoices/vendor-invoice-form').then(
+            (m) => m.VendorInvoiceFormComponent
+          ),
+      },
+      {
+        path: 'vendor-invoices/:id/edit',
+        loadComponent: () =>
+          import('./features/vendor-invoices/vendor-invoice-form').then(
+            (m) => m.VendorInvoiceFormComponent
+          ),
+      },
+      {
+        path: 'vendor-invoices/:id',
+        loadComponent: () =>
+          import('./features/vendor-invoices/vendor-invoice-detail').then(
+            (m) => m.VendorInvoiceDetailComponent
+          ),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings').then((m) => m.SettingsComponent),

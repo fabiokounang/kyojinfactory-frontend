@@ -2,6 +2,12 @@
   margin-bottom: 20px;
 }
 
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .page-header {
   display: flex;
   flex-wrap: wrap;

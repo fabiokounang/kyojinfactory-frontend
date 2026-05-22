@@ -1,0 +1,159 @@
+<div class="page">
+  <div class="page-header">
+    <a mat-button class="back-link" routerLink="/customer-invoices">
+      <mat-icon>arrow_back</mat-icon> Daftar Faktur
+    </a>
+    <h1>{{ isEditMode() ? 'Ubah Faktur Penjualan' : 'Buat Faktur Penjualan' }}</h1>
+    <p>Tagihan ke customer berdasarkan PO Customer yang sudah dikonfirmasi.</p>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert--error">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-center"><mat-spinner diameter="40"></mat-spinner></div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <mat-card class="section-card">
+        <mat-card-header>
+          <mat-card-title>Informasi Faktur</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Referensi PO -->
+          <div class="form-section">
+            <h3 class="form-section__title">Referensi PO</h3>
+            <div class="form-grid">
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>PO Customer</mat-label>
+                <mat-select formControlName="customerPoId" (selectionChange)="onPoChange($event.value)">
+                  <mat-option [value]="null" disabled>— Pilih PO Customer —</mat-option>
+                  @for (po of eligiblePos(); track po.id) {
+                    <mat-option [value]="po.id">
+                      {{ po.poNumber }} — {{ po.customer.name }}
+                      <span class="po-total-hint">(Rp {{ po.poTotal | number:'1.0-0' }})</span>
+                    </mat-option>
+                  }
+                </mat-select>
+                @if (eligiblePos().length === 0) {
+                  <mat-hint>Belum ada PO Customer yang siap difakturkan.</mat-hint>
+                }
+              </mat-form-field>
+
+              @if (prefill()) {
+                <div class="info-banner span-2">
+                  <mat-icon>info_outline</mat-icon>
+                  <div class="info-banner__item">
+                    <span class="label">Customer</span>
+                    <span class="value">{{ prefill()!.po.customer.name }}</span>
+                  </div>
+                  <span class="info-banner__sep">·</span>
+                  <div class="info-banner__item">
+                    <span class="label">Total PO</span>
+                    <span class="value">Rp {{ prefill()!.po.grandTotal | number:'1.0-0' }}</span>
+                  </div>
+                  <span class="info-banner__sep">·</span>
+                  <div class="info-banner__item">
+                    <span class="label">PPN</span>
+                    <span class="value">{{ prefill()!.po.ppnRate }}%</span>
+                  </div>
+                </div>
+
+                @if (prefill()!.paymentTerms.length > 0) {
+                  <mat-form-field appearance="outline" class="span-2">
+                    <mat-label>Termin pembayaran</mat-label>
+                    <mat-select formControlName="customerPoPaymentTermId" (selectionChange)="onTermChange($event.value)">
+                      <mat-option [value]="null">Full PO — seluruh nilai PO</mat-option>
+                      @for (t of prefill()!.paymentTerms; track t.id) {
+                        <mat-option [value]="t.id">
+                          {{ t.label || ('Termin ' + t.termNo) }} — Rp {{ t.suggestedAmount | number:'1.0-0' }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    <mat-hint>Pilih termin jika faktur ini untuk sebagian pembayaran PO</mat-hint>
+                  </mat-form-field>
+                }
+              } @else if (!form.controls.customerPoId.value) {
+                <p class="empty-po-hint">Pilih PO Customer di atas untuk mengisi detail tagihan.</p>
+              }
+            </div>
+          </div>
+
+          @if (prefill() || form.controls.customerPoId.value) {
+            <!-- Tanggal & Nominal -->
+            <div class="form-section">
+              <h3 class="form-section__title">Tanggal &amp; Nominal</h3>
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Tanggal faktur</mat-label>
+                  <input matInput type="date" formControlName="invoiceDate" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Jatuh tempo</mat-label>
+                  <input matInput type="date" formControlName="dueDate" />
+                  <mat-hint>Kosongkan jika belum ditentukan</mat-hint>
+                </mat-form-field>
+
+                <div class="amount-box">
+                  <mat-form-field appearance="outline" class="amount-box__input">
+                    <mat-label>Total tagihan (inc. PPN)</mat-label>
+                    <span matTextPrefix class="amount-prefix">Rp</span>
+                    <input
+                      matInput
+                      type="number"
+                      class="amount-input"
+                      formControlName="total"
+                      min="0.01"
+                      placeholder="0"
+                    />
+                  </mat-form-field>
+
+                  @if (prefill()) {
+                    <div class="amount-box__breakdown">
+                      <div class="amount-box__row">
+                        <span>DPP</span>
+                        <span>Rp {{ calcDpp() | number:'1.0-0' }}</span>
+                      </div>
+                      <div class="amount-box__row">
+                        <span>PPN ({{ prefill()!.po.ppnRate }}%)</span>
+                        <span>Rp {{ calcPpn() | number:'1.0-0' }}</span>
+                      </div>
+                      <div class="amount-box__row amount-box__row--total">
+                        <span>Total</span>
+                        <span>Rp {{ form.controls.total.value | number:'1.0-0' }}</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Catatan -->
+            <div class="form-section">
+              <h3 class="form-section__title">Catatan</h3>
+              <div class="form-grid">
+                <mat-form-field appearance="outline" class="span-2">
+                  <mat-label>Catatan (opsional)</mat-label>
+                  <textarea matInput formControlName="notes" rows="3" placeholder="Keterangan tambahan untuk faktur ini…"></textarea>
+                </mat-form-field>
+              </div>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <div class="form-actions">
+        <a mat-stroked-button routerLink="/customer-invoices">Batal</a>
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !form.controls.customerPoId.value">
+          @if (saving()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          } @else {
+            <mat-icon>save</mat-icon>
+          }
+          Simpan Draft
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -9,8 +9,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -111,10 +110,9 @@ export class ProdOrderFormFormComponent {
             },
           });
         } else {
-          // default issued_by = current user
           const me = this.auth.user();
           if (me) {
-            const found = assignees.find((a) => a.id === (me as any).id);
+            const found = assignees.find((a) => a.id === (me as { id: number }).id);
             if (found) this.form.controls.issuedByUserId.setValue(found.id);
           }
           this.loading.set(false);
@@ -128,7 +126,6 @@ export class ProdOrderFormFormComponent {
   }
 
   private patchForEdit(pof: Pof, eligible: EligibleCustomerPo[]): void {
-    // In edit mode, include current PO even if it already has a POF (it IS the one being edited)
     const alreadyInList = eligible.some((e) => e.id === pof.customerPoId);
     if (!alreadyInList) {
       this.eligiblePos.update((list) => [
@@ -140,6 +137,10 @@ export class ProdOrderFormFormComponent {
           linesTotal: pof.lines.length,
           linesWithBom: pof.lines.filter((l) => l.bomVersionId).length,
           isReady: true,
+          hasRemaining: true,
+          remainingQty: 0,
+          allocatedQty: 0,
+          poQty: 0,
         },
         ...list,
       ]);
@@ -155,16 +156,18 @@ export class ProdOrderFormFormComponent {
 
     this.linesArray.clear();
     for (const line of pof.lines) {
-      this.linesArray.push(this.makeLine({
-        customerPoLineId: line.customerPoLineId,
-        productNumber: line.productNumber,
-        itemName: line.itemName,
-        qtyToProduce: line.qtyToProduce,
-        unit: line.unit,
-        bomVersionId: line.bomVersionId,
-        startDate: line.startDate ?? '',
-        endDate: line.endDate ?? '',
-      }));
+      this.linesArray.push(
+        this.makeLine({
+          customerPoLineId: line.customerPoLineId,
+          productNumber: line.productNumber,
+          itemName: line.itemName,
+          qtyToProduce: line.qtyToProduce,
+          unit: line.unit,
+          bomVersionId: line.bomVersionId,
+          startDate: line.startDate ?? '',
+          endDate: line.endDate ?? '',
+        })
+      );
     }
     this.loading.set(false);
   }
@@ -188,16 +191,18 @@ export class ProdOrderFormFormComponent {
         this.prefill.set(data);
         this.linesArray.clear();
         for (const line of data.lines) {
-          this.linesArray.push(this.makeLine({
-            customerPoLineId: line.customerPoLineId,
-            productNumber: line.productNumber,
-            itemName: line.itemName,
-            qtyToProduce: line.cpoQty,
-            unit: line.unit,
-            bomVersionId: line.bomVersionId,
-            startDate: '',
-            endDate: '',
-          }));
+          this.linesArray.push(
+            this.makeLine({
+              customerPoLineId: line.customerPoLineId,
+              productNumber: line.productNumber,
+              itemName: line.itemName,
+              qtyToProduce: line.cpoQty,
+              unit: line.unit,
+              bomVersionId: line.bomVersionId,
+              startDate: '',
+              endDate: '',
+            })
+          );
         }
       },
       error: () => {
@@ -220,7 +225,10 @@ export class ProdOrderFormFormComponent {
       customerPoLineId: this.fb.nonNullable.control(defaults.customerPoLineId),
       productNumber: this.fb.nonNullable.control(defaults.productNumber),
       itemName: this.fb.nonNullable.control(defaults.itemName),
-      qtyToProduce: this.fb.nonNullable.control(defaults.qtyToProduce, [Validators.required, Validators.min(0.0001)]),
+      qtyToProduce: this.fb.nonNullable.control(defaults.qtyToProduce, [
+        Validators.required,
+        Validators.min(0.0001),
+      ]),
       unit: this.fb.nonNullable.control(defaults.unit),
       bomVersionId: this.fb.control<number | null>(defaults.bomVersionId),
       startDate: this.fb.nonNullable.control(defaults.startDate, Validators.required),

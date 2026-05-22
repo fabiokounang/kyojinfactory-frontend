@@ -232,6 +232,20 @@
       </mat-card>
     }
 
+    @if (v.status !== 'DRAFT' && v.status !== 'CANCELLED') {
+      <mat-card class="section-card">
+        <mat-card-header><mat-card-title>Faktur Pembelian</mat-card-title></mat-card-header>
+        <mat-card-content class="link-row">
+          <a mat-stroked-button [routerLink]="['/vendor-invoices']" [queryParams]="{ vendorPoId: v.id }">
+            <mat-icon>receipt</mat-icon> Lihat faktur untuk PO ini
+          </a>
+          <a mat-flat-button color="primary" routerLink="/vendor-invoices/new">
+            <mat-icon>add</mat-icon> Input faktur
+          </a>
+        </mat-card-content>
+      </mat-card>
+    }
+
     <div class="back-action">
       <a mat-stroked-button routerLink="/vendor-pos">
         <mat-icon>arrow_back</mat-icon> Kembali ke daftar
